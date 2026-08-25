@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
 export function SignUpForm() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,11 +39,7 @@ export function SignUpForm() {
     setPending(false);
 
     if (error) {
-      if (error.status === 422 || /exist/i.test(error.message ?? "")) {
-        setError("An account with this email already exists.");
-      } else {
-        setError(error.message ?? "Something went wrong. Please try again.");
-      }
+      setError(error.message ?? t("genericError"));
       return;
     }
 
@@ -53,27 +50,26 @@ export function SignUpForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-xl">Create your account</CardTitle>
-        <CardDescription>Sign up with email and password</CardDescription>
+        <CardTitle className="text-xl">{t("signUpTitle")}</CardTitle>
+        <CardDescription>{t("signUpDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("nameLabel")}</Label>
             <Input
               id="name"
-              type="text"
-              placeholder="Ali Ahmadi"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <Input
               id="email"
               type="email"
+              dir="ltr"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -81,27 +77,30 @@ export function SignUpForm() {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("passwordLabel")}</Label>
             <Input
               id="password"
               type="password"
+              dir="ltr"
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <p className="text-xs text-muted-foreground">At least 8 characters.</p>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>
             {pending && <Spinner />}
-            Sign up
+            {t("signUpBtn")}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/sign-in" className="font-medium underline-offset-4 hover:underline">
-            Sign in
+          {t("haveAccount")}{" "}
+          <Link
+            href="/sign-in"
+            className="font-medium underline-offset-4 hover:underline"
+          >
+            {t("signInLink")}
           </Link>
         </p>
       </CardContent>

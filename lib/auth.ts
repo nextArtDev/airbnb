@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { phoneNumber } from "better-auth/plugins";
+import { admin, phoneNumber } from "better-auth/plugins";
 import prisma from "./prisma";
 import { normalizeIranMobile } from "./phone";
 import { sendSms } from "./sms";
@@ -47,6 +47,7 @@ export const auth = betterAuth({
         getTempName: (phoneNumber) => formatPhoneAsName(phoneNumber),
       },
     }),
+    admin(),
   ],
 });
 

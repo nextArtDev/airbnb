@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 import { formatIranMobile, normalizeIranMobile } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
@@ -17,14 +18,15 @@ import { Label } from "@/components/ui/label";
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSlot,
   InputOTPSeparator,
+  InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Spinner } from "@/components/ui/spinner";
 
 const RESEND_SECONDS = 60;
 
 export function PhoneOtpForm() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [phoneInput, setPhoneInput] = useState("");
@@ -54,7 +56,7 @@ export function PhoneOtpForm() {
 
     const normalized = normalizeIranMobile(phoneInput);
     if (!normalized) {
-      setError("Enter a valid Iranian mobile number, e.g. 0912 345 6789");
+      setError(t("phoneInvalid"));
       return;
     }
 
@@ -65,7 +67,7 @@ export function PhoneOtpForm() {
     setPending(false);
 
     if (error) {
-      setError(error.message ?? "Could not send the code. Please try again.");
+      setError(error.message ?? t("otpSendFailed"));
       return;
     }
 
@@ -87,7 +89,7 @@ export function PhoneOtpForm() {
     setPending(false);
 
     if (error) {
-      setError(error.message ?? "Verification failed. Please try again.");
+      setError(error.message ?? t("otpFailed"));
       return;
     }
 
@@ -99,12 +101,15 @@ export function PhoneOtpForm() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-xl">Verify your phone</CardTitle>
+          <CardTitle className="text-xl">{t("verifyTitle")}</CardTitle>
           <CardDescription>
-            We sent a 6-digit code via SMS to{" "}
-            <span className="font-medium text-foreground">
-              {formatIranMobile(phoneNumber)}
-            </span>
+            {t.rich("verifyDesc", {
+              phone: () => (
+                <span className="font-medium text-foreground" dir="ltr">
+                  {formatIranMobile(phoneNumber)}
+                </span>
+              ),
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,6 +120,7 @@ export function PhoneOtpForm() {
               onChange={(value) => setCode(value)}
               onComplete={(value) => void onVerify(value)}
               disabled={pending}
+              dir="ltr"
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -135,7 +141,7 @@ export function PhoneOtpForm() {
               className="w-full"
             >
               {pending && <Spinner />}
-              Verify & continue
+              {t("verifyBtn")}
             </Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <button
@@ -144,9 +150,11 @@ export function PhoneOtpForm() {
                 onClick={() => void onSendOtp()}
                 disabled={resendIn > 0 || pending}
               >
-                Resend code
+                {t("resendCode")}
               </button>
-              {resendIn > 0 && <span>in {resendIn}s</span>}
+              {resendIn > 0 && (
+                <span>{t("resendIn", { seconds: resendIn })}</span>
+              )}
               <span aria-hidden>|</span>
               <button
                 type="button"
@@ -157,7 +165,7 @@ export function PhoneOtpForm() {
                   setCode("");
                 }}
               >
-                Change number
+                {t("changeNumber")}
               </button>
             </div>
           </div>
@@ -169,22 +177,19 @@ export function PhoneOtpForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-xl">Sign in with phone</CardTitle>
-        <CardDescription>
-          We&apos;ll text you a one-time code. New numbers are signed up
-          automatically.
-        </CardDescription>
+        <CardTitle className="text-xl">{t("phoneTitle")}</CardTitle>
+        <CardDescription>{t("phoneDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={(e) => void onSendOtp(e)} className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="phone">Mobile number</Label>
+            <Label htmlFor="phone">{t("phoneLabel")}</Label>
             <Input
               id="phone"
               type="tel"
               inputMode="tel"
               dir="ltr"
-              placeholder="0912 345 6789"
+              placeholder={t("phonePlaceholder")}
               value={phoneInput}
               onChange={(e) => setPhoneInput(e.target.value)}
               autoComplete="tel-national"
@@ -194,7 +199,7 @@ export function PhoneOtpForm() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>
             {pending && <Spinner />}
-            Send code
+            {t("sendCode")}
           </Button>
         </form>
       </CardContent>
