@@ -29,7 +29,7 @@ export const auth = betterAuth({
         normalizeIranMobile(phoneNumber) !== null,
       // Not awaited on purpose: keeps the request fast and avoids timing
       // attacks (recommended by better-auth docs).
-      sendOTP: ({ phoneNumber, code }, ctx) => {
+      sendOTP: ({ phoneNumber, code }) => {
         void sendSms(phoneNumber, `کد تایید شما: ${code}`)
           .then((result) => {
             if (!result.delivered) {
