@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ export function DeleteListingButton({ listingId }: { listingId: string }) {
       size="icon-sm"
       onClick={onDelete}
       disabled={pending}
-      aria-label={t("edit")}
+      aria-label={t("deleteConfirmTitle")}
       className="text-destructive hover:bg-destructive/10"
     >
       {pending ? <Spinner className="size-3.5" /> : <Trash2 className="size-4" />}

@@ -49,7 +49,6 @@ export async function releasePaymentLock(reservationId: string) {
 export async function validatePaymentAttempt(
   reservationId: string,
   authority: string,
-  amount: number,
 ): Promise<boolean> {
   const existing = await prisma.paymentAttempt.findUnique({
     where: { reservationId_authority: { reservationId, authority } },

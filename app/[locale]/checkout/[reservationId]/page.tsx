@@ -1,4 +1,6 @@
-import { notFound, redirect } from "next/navigation";import { PaymentStatus } from "@/app/generated/prisma/client";
+import { notFound, redirect } from "next/navigation";
+import Image from "next/image";
+import { PaymentStatus } from "@/app/generated/prisma/client";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
@@ -47,11 +49,15 @@ export default async function CheckoutPage(
         <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
         <div className="grid gap-8 sm:grid-cols-[160px_1fr]">
-          <img
-            src={reservation.listing.coverImage}
-            alt=""
-            className="aspect-square w-full rounded-xl object-cover"
-          />
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl">
+            <Image
+              src={reservation.listing.coverImage}
+              alt={reservation.listing.title}
+              fill
+              sizes="160px"
+              className="object-cover"
+            />
+          </div>
           <div className="space-y-2 text-sm">
             <Link
               href={`/listings/${reservation.listing.id}`}
@@ -65,7 +71,7 @@ export default async function CheckoutPage(
               {formatMoney(reservation.totalPrice / Math.max(reservation.nights, 1), locale)}
             </p>
             <p>
-              <span className="text-muted-foreground">{t("selectDates")}: </span>
+              <span className="text-muted-foreground">{t("dates")}: </span>
               {formatDate(reservation.startDate, locale)} →{" "}
               {formatDate(reservation.endDate, locale)}
             </p>

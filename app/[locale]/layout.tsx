@@ -37,6 +37,12 @@ export async function generateMetadata(props: LayoutProps<"/[locale]">): Promise
       template: t("template"),
     },
     description: t("description"),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: Object.fromEntries(
+        routing.locales.map((l) => [l, `/${l}`]),
+      ),
+    },
   };
 }
 

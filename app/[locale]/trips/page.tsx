@@ -1,4 +1,5 @@
 import { PaymentStatus } from "@/app/generated/prisma/client";
+import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CircleCheck, CircleX } from "lucide-react";
 import { CancelReservationButton } from "@/components/booking/cancel-reservation-button";
@@ -62,11 +63,15 @@ export default async function TripsPage(props: PageProps<"/[locale]/trips">) {
 
     return (
       <div className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center">
-        <img
-          src={reservation.listing.coverImage}
-          alt=""
-          className="h-28 w-full rounded-xl object-cover sm:w-40"
-        />
+        <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-xl sm:w-40">
+          <Image
+            src={reservation.listing.coverImage}
+            alt=""
+            fill
+            sizes="160px"
+            className="object-cover"
+          />
+        </div>
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <Link
@@ -94,7 +99,7 @@ export default async function TripsPage(props: PageProps<"/[locale]/trips">) {
               <Button
                 asChild
                 size="sm"
-                className="rounded-full bg-rose-500 hover:bg-rose-600"
+                className="rounded-full bg-rose-600 hover:bg-rose-700"
               >
                 <Link href={`/checkout/${reservation.id}`}>
                   {t("completePayment")}
@@ -176,7 +181,7 @@ export default async function TripsPage(props: PageProps<"/[locale]/trips">) {
         ) : upcoming.length === 0 ? (
           <div className="py-16 text-center">
             <p className="mb-4 text-muted-foreground">{t("empty")}</p>
-            <Button asChild className="rounded-full bg-rose-500 hover:bg-rose-600">
+            <Button asChild className="rounded-full bg-rose-600 hover:bg-rose-700">
               <Link href="/">{t("emptyAction")}</Link>
             </Button>
           </div>

@@ -41,7 +41,7 @@ export default async function FavoritesPage(
         {ordered.length === 0 ? (
           <div className="py-16 text-center">
             <p className="mb-4 text-muted-foreground">{t("empty")}</p>
-            <Button asChild className="rounded-full bg-rose-500 hover:bg-rose-600">
+            <Button asChild className="rounded-full bg-rose-600 hover:bg-rose-700">
               <Link href="/">{th("allListings")}</Link>
             </Button>
           </div>

@@ -151,7 +151,6 @@ export async function verifyZarinpalPayment(params: {
       !(await validatePaymentAttempt(
         params.reservationId,
         params.authority,
-        reservation.totalPrice,
       ))
     ) {
       return { success: false, message: "replayDetected" };
@@ -320,7 +319,7 @@ export async function confirmStripePayment(
     if (reservation.paymentStatus === PaymentStatus.Paid) {
       return { success: true, alreadyPaid: true };
     }
-    if (!(await validatePaymentAttempt(reservationId, paymentIntentId, reservation.totalPrice))) {
+    if (!(await validatePaymentAttempt(reservationId, paymentIntentId))) {
       return { success: false, message: "replayDetected" };
     }
 

@@ -31,18 +31,21 @@ async function createUser(input: {
   image?: string;
 }) {
   const hashedPassword = await hashPassword(input.password);
+  const userId = crypto.randomUUID();
   return prisma.user.create({
     data: {
-      id: crypto.randomUUID(),
+      id: userId,
       name: input.name,
       email: input.email,
       role: input.role ?? "user",
       image: input.image,
       accounts: {
+        // better-auth expects accountId = userId and issuer = "local:<provider>"
+        // for credential accounts - anything else breaks sign-in verification.
         create: {
           id: crypto.randomUUID(),
-          issuer: "credential",
-          accountId: input.email,
+          issuer: "local:credential",
+          accountId: userId,
           providerId: "credential",
           password: hashedPassword,
         },

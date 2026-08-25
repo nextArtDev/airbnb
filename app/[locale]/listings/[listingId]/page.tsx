@@ -108,7 +108,7 @@ async function ListingContent({
               <h2 className="text-lg font-semibold">{t("hostedBy", { name: detail.listing.user.name ?? "?" })}</h2>
               <Link
                 href={`/inbox?to=${detail.listing.userId}&listing=${listingId}`}
-                className="mt-1 inline-block text-sm text-rose-500 hover:underline"
+                className="mt-1 inline-block text-sm text-rose-600 hover:underline"
               >
                 {t("contactHost")}
               </Link>

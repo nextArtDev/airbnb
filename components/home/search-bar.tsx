@@ -30,8 +30,8 @@ export function SearchBar({
     const params = new URLSearchParams();
     if (city.trim()) params.set("city", city.trim());
     if (guests > 1) params.set("guests", String(guests));
-    if (checkIn) params.set("checkIn", checkIn.toISOString());
-    if (checkOut) params.set("checkOut", checkOut.toISOString());
+    if (checkIn) params.set("checkIn", checkIn.toLocaleDateString("en-CA"));
+    if (checkOut) params.set("checkOut", checkOut.toLocaleDateString("en-CA"));
     router.push(params.size > 0 ? `/?${params}` : "/");
   }
 
@@ -57,6 +57,8 @@ export function SearchBar({
         <div className="mt-1 flex items-center gap-2" dir="ltr">
           <DatePicker
             calendarType={calendarType}
+            confirmLabel={tc("confirm")}
+            cancelLabel={tc("cancel")}
             value={checkIn}
             onValueChange={(v) => {
               setCheckIn(v);
@@ -67,6 +69,8 @@ export function SearchBar({
           />
           <DatePicker
             calendarType={calendarType}
+            confirmLabel={tc("confirm")}
+            cancelLabel={tc("cancel")}
             value={checkOut}
             onValueChange={setCheckOut}
             placeholder={t("checkOut")}
@@ -83,12 +87,13 @@ export function SearchBar({
               type="button"
               variant="outline"
               size="icon-sm"
+              className="size-10"
               onClick={() => setGuests((g) => Math.max(1, g - 1))}
-              aria-label="-"
+              aria-label={tc("decrease")}
             >
               <Minus />
             </Button>
-            <span className="min-w-10 text-center text-sm">
+            <span className="min-w-14 text-center text-sm" aria-live="polite">
               {new Intl.NumberFormat(locale === "fa" ? "fa-IR" : locale === "ar" ? "ar" : "en-US").format(guests)}{" "}
               {tc("guests")}
             </span>
@@ -96,8 +101,9 @@ export function SearchBar({
               type="button"
               variant="outline"
               size="icon-sm"
+              className="size-10"
               onClick={() => setGuests((g) => Math.min(16, g + 1))}
-              aria-label="+"
+              aria-label={tc("increase")}
             >
               <Plus />
             </Button>
@@ -106,7 +112,7 @@ export function SearchBar({
         <Button
           type="submit"
           size="sm"
-          className="rounded-xl bg-rose-500 hover:bg-rose-600"
+          className="rounded-xl bg-rose-600 hover:bg-rose-700"
         >
           <Search className="size-4" />
           {t("searchButton")}

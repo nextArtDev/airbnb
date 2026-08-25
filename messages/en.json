@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Safarino | Vacation Rentals",
-    "template": "  Safarino",
+    "template": "%s | Safarino",
     "description": "Book villas, eco-lodges and unique stays across Iran and around the world"
   },
   "nav": {
@@ -32,6 +32,8 @@
     "tryAgain": "Try again",
     "notFound": "The page you were looking for could not be found.",
     "goHome": "Go home",
+    "increase": "Increase",
+    "decrease": "Decrease",
     "toman": "Toman",
     "night": "night",
     "guest": "guest",
@@ -110,7 +112,8 @@
     "host": "Host",
     "hostedBy": "Hosted by {name}",
     "reserve": "Reserve",
-    "selectDates": "Select dates",
+        "selectDates": "Select dates",
+    "dates": "Dates",
     "datesUnavailable": "These dates are not available",
     "contactHost": "Message host",
     "amenities": {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import { Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
@@ -163,10 +164,10 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
   });
 
   const counterFields = [
-    { name: "guestCount" as const, min: 1, max: 16 },
-    { name: "bedroomCount" as const, min: 0, max: 20 },
-    { name: "bedCount" as const, min: 1, max: 40 },
-    { name: "bathroomCount" as const, min: 1, max: 10 },
+    { name: "guestCount" as const, min: 1, max: 16, label: "form.guestsLabel" },
+    { name: "bedroomCount" as const, min: 0, max: 20, label: "form.bedroomsLabel" },
+    { name: "bedCount" as const, min: 1, max: 40, label: "form.bedsLabel" },
+    { name: "bathroomCount" as const, min: 1, max: 10, label: "form.bathsLabel" },
   ];
 
   const err = (name: keyof ListingFormValues): string | undefined => {
@@ -216,7 +217,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             ))}
           </div>
           {err("category") && (
-            <p className="mt-2 text-sm text-destructive">{err("category")}</p>
+            <p role="alert" className="mt-2 text-sm text-destructive">{err("category")}</p>
           )}
         </section>
       )}
@@ -226,7 +227,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
           <div className="grid gap-2">
             <Label htmlFor="city">{t("form.cityLabel")} *</Label>
             <Input id="city" {...form.register("city")} />
-            {err("city") && <p className="text-sm text-destructive">{err("city")}</p>}
+            {err("city") && <p role="alert" className="text-sm text-destructive">{err("city")}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="province">{t("form.provinceLabel")}</Label>
@@ -270,7 +271,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
           <div className="grid gap-2">
             <Label htmlFor="title">{t("form.titleLabel")} *</Label>
             <Input id="title" {...form.register("title")} placeholder={t("form.titlePlaceholder")} />
-            {err("title") && <p className="text-sm text-destructive">{err("title")}</p>}
+            {err("title") && <p role="alert" className="text-sm text-destructive">{err("title")}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="description">{t("form.descriptionLabel")} *</Label>
@@ -281,13 +282,13 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
               placeholder={t("form.descriptionPlaceholder")}
             />
             {err("description") && (
-              <p className="text-sm text-destructive">{err("description")}</p>
+              <p role="alert" className="text-sm text-destructive">{err("description")}</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {counterFields.map(({ name, min, max }) => (
+            {counterFields.map(({ name, min, max, label }) => (
               <div key={name} className="grid gap-1.5">
-                <Label htmlFor={name}>{t(`form.${name}Label`)}*</Label>
+                <Label htmlFor={name}>{t(label)}*</Label>
                 <Input
                   id={name}
                   type="number"
@@ -360,7 +361,15 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {galleryUrls.map((url, i) => (
                 <div key={url} className="group relative overflow-hidden rounded-xl border">
-                  <img src={url} alt="" className="aspect-square w-full object-cover" />
+                  <div className="relative aspect-square w-full">
+                    <Image
+                      src={url}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                      className="object-cover"
+                    />
+                  </div>
                   {i === 0 ? (
                     <span className="absolute start-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
                       ★ {t("form.coverLabel")}
@@ -409,7 +418,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             </span>
           </div>
           {err("pricePerNight") && (
-            <p className="text-sm text-destructive">{err("pricePerNight")}</p>
+            <p role="alert" className="text-sm text-destructive">{err("pricePerNight")}</p>
           )}
           {form.watch("pricePerNight") != null && (
             <p className="text-sm text-muted-foreground" dir="auto">
@@ -440,7 +449,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
           <Button
             type="submit"
             disabled={pending}
-            className="bg-rose-500 hover:bg-rose-600"
+            className="bg-rose-600 hover:bg-rose-700"
           >
             {pending && <Spinner />}
             {listingId ? t("form.submitUpdate") : t("form.submitCreate")}

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LocaleErrorPage({
@@ -19,7 +20,7 @@ export default function LocaleErrorPage({
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-24 text-center">
-      <p className="text-5xl">⚠️</p>
+      <TriangleAlert className="size-10 text-amber-500" aria-hidden />
       <p className="text-lg text-muted-foreground">{t("genericError")}</p>
       <Button onClick={reset} variant="outline" className="rounded-full">
         {t("tryAgain")}

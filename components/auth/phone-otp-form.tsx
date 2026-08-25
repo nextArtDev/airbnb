@@ -134,7 +134,7 @@ export function PhoneOtpForm() {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <Button
               onClick={() => void onVerify(code)}
               disabled={pending || code.length !== 6}
@@ -196,7 +196,7 @@ export function PhoneOtpForm() {
               required
             />
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>
             {pending && <Spinner />}
             {t("sendCode")}

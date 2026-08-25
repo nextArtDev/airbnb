@@ -6,9 +6,12 @@ import prisma from "@/lib/prisma";
  * Cron sweep (system cron on VPS):
  *   *\/15 * * * * curl -s -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sweep
  *
- * 1) Cancels stale Pending reservations older than 24h (frees held dates).
- * 2) Re-verifies Pending reservations that carry an authority (money may have
- *    moved even though the browser never came back).
+ * 1) Reconciles authoritied Pending reservations (money may have moved even
+ *    though the browser never came back). Runs BEFORE the stale cancel so
+ *    paid-at-gateway-but-abandoned payments are never lost.
+ * 2) Cancels stale Pending reservations older than 24h that never initiated
+ *    payment (authority is null). Authoritied ones are kept for reconciliation
+ *    every cycle.
  */
 const STALE_PENDING_HOURS = 24;
 const RECONCILE_BATCH = 50;
@@ -20,17 +23,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  // 1) Stale pending sweep
   const cutoff = new Date(Date.now() - STALE_PENDING_HOURS * 60 * 60 * 1000);
-  const stale = await prisma.reservation.updateMany({
-    where: {
-      paymentStatus: PaymentStatus.Pending,
-      createdAt: { lt: cutoff },
-    },
-    data: { paymentStatus: PaymentStatus.Cancelled, authority: null },
-  });
 
-  // 2) Reconciliation of authoritied pendings
+  // 1) Reconciliation of authoritied pendings — money may have moved
   const { reconcilePendingStripe } = await import("@/lib/actions/payments");
   const { reconcilePendingZarinpal } = await import("@/lib/actions/payments");
 
@@ -38,7 +33,6 @@ export async function GET(request: NextRequest) {
     where: {
       paymentStatus: PaymentStatus.Pending,
       authority: { not: null },
-      updatedAt: { gt: cutoff }, // fresh ones only; older ones were cancelled above
     },
     select: { id: true, paymentMethod: true },
     take: RECONCILE_BATCH,
@@ -56,6 +50,18 @@ export async function GET(request: NextRequest) {
       console.error(`reconcile failed for ${r.id}:`, error);
     }
   }
+
+  // 2) Cancel stale pendings that never initiated payment (authority is null).
+  //    Authoritied ones are safe — they are either reconciled to Paid or
+  //    remain Pending with authority preserved for the next cycle.
+  const stale = await prisma.reservation.updateMany({
+    where: {
+      paymentStatus: PaymentStatus.Pending,
+      authority: null,
+      createdAt: { lt: cutoff },
+    },
+    data: { paymentStatus: PaymentStatus.Cancelled },
+  });
 
   return NextResponse.json({
     ok: true,

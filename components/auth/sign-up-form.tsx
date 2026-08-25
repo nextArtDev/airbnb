@@ -88,7 +88,7 @@ export function SignUpForm() {
               required
             />
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>
             {pending && <Spinner />}
             {t("signUpBtn")}

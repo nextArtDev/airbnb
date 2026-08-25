@@ -57,14 +57,14 @@ export function HeartButton({
       aria-pressed={favorited}
       onClick={onClick}
       disabled={pending}
-      className="absolute end-3 top-3 z-10 rounded-full bg-black/35 p-2 text-white backdrop-blur transition hover:scale-110 hover:bg-black/50 disabled:opacity-70"
+      className="absolute end-2 top-2 z-10 grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/50 disabled:opacity-70 motion-reduce:transition-none"
     >
       {pending ? (
         <Spinner className="size-4" />
       ) : (
         <Heart
           className={cn(
-            "size-4 drop-shadow",
+            "size-[18px] drop-shadow",
             favorited && "fill-rose-500 text-rose-500",
           )}
         />

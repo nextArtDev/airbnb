@@ -1,4 +1,5 @@
 import { useLocale, useTranslations } from "next-intl";
+import Image from "next/image";
 import { Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { formatMoney } from "@/lib/format";
@@ -34,11 +35,12 @@ export function ListingCard({
         className="block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
       >
         <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
-          <img
+          <Image
             src={listing.coverImage}
             alt={listing.title}
-            loading="lazy"
-            className="size-full object-cover transition duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            className="object-cover transition duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         </div>
         <div className="mt-2 space-y-0.5">

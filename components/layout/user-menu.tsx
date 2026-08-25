@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import {
   Heart,
   Home,
@@ -10,7 +11,6 @@ import {
   Luggage,
   Menu,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -116,20 +116,29 @@ export function LanguageSwitcher() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   function switchTo(locale: "fa" | "en" | "ar") {
-    router.replace(pathname, { locale });
+    // Preserve the current query (search filters etc.) across locales.
+    const qs = searchParams.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { locale });
   }
 
   return (
-    <div className="flex items-center rounded-full border px-1 py-0.5 text-xs font-medium">
+    <div
+      role="group"
+      aria-label={t("language")}
+      className="flex items-center gap-0.5 rounded-full border p-1 text-xs font-medium"
+    >
       {(["fa", "en", "ar"] as const).map((locale) => (
         <button
           key={locale}
           type="button"
           onClick={() => switchTo(locale)}
-          className="rounded-full px-2 py-1 uppercase hover:bg-accent"
+          data-active={pathname.split("/")[1] === locale}
+          className="min-h-[32px] rounded-full px-3 py-1.5 uppercase transition hover:bg-accent data-[active=true]:bg-foreground data-[active=true]:text-background motion-reduce:transition-none"
           aria-label={`${t("language")}: ${locale}`}
+          aria-pressed={pathname.split("/")[1] === locale}
         >
           {locale === "fa" ? "فا" : locale}
         </button>

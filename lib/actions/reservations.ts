@@ -20,10 +20,14 @@ export interface ActionResult {
   redirectTo?: string;
 }
 
-function startOfDay(d: Date): Date {
-  const c = new Date(d);
-  c.setHours(0, 0, 0, 0);
-  return c;
+/**
+ * Normalizes any timestamp to the UTC-midnight instant of its calendar day.
+ * Dates are stored as whole days (UTC midnight) so night counts, overlap
+ * checks and timezone shifts stay consistent regardless of where the client
+ * or server runs.
+ */
+function toUtcCalendarDay(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
 /**
@@ -33,17 +37,23 @@ function startOfDay(d: Date): Date {
  */
 export async function createReservation(
   input: unknown,
-  locale: string,
 ): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) return { success: false, message: "unauthorized" };
 
   const parsed = createReservationSchema.safeParse(input);
   if (!parsed.success) return { success: false, message: "invalid input" };
-  const { listingId, checkIn, checkOut, guests } = parsed.data;
+  const { listingId, guests } = parsed.data;
+
+  // Treat all input as calendar days at UTC midnight. This makes the check
+  // below and every overlap comparison timezone-agnostic.
+  const checkIn = toUtcCalendarDay(parsed.data.checkIn);
+  const checkOut = toUtcCalendarDay(parsed.data.checkOut);
 
   if (checkOut <= checkIn) return { success: false, message: "dateError" };
-  if (startOfDay(checkIn) < startOfDay(new Date())) {
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+  if (checkIn < todayUtc) {
     return { success: false, message: "pastDateError" };
   }
 
@@ -79,7 +89,7 @@ export async function createReservation(
     });
     if (overlap > 0) return { success: false, message: "overlapError" };
 
-    const nights = Math.ceil(
+    const nights = Math.round(
       (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
     );
     const totalPrice = roundToman(nights * listing.pricePerNight);
@@ -129,7 +139,8 @@ export async function createReservation(
 
     return {
       success: true,
-      redirectTo: `/${locale}/checkout/${created.id}`,
+      // Locale-free: the client's i18n router adds the locale prefix itself.
+      redirectTo: `/checkout/${created.id}`,
     };
   } catch (error) {
     if (error instanceof Error && error.message === "overlapError") {

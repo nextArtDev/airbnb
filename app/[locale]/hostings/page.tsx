@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import Image from "next/image";
 import { PaymentStatus } from "@/app/generated/prisma/client";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pencil } from "lucide-react";
@@ -39,7 +40,7 @@ export default async function HostingsPage(props: PageProps<"/[locale]/hostings"
       <main className="mx-auto max-w-5xl flex-1 px-4 py-10">
         <div className="mb-8 flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <Button asChild className="rounded-full bg-rose-500 hover:bg-rose-600">
+          <Button asChild className="rounded-full bg-rose-600 hover:bg-rose-700">
             <Link href="/hostings/new">{t("new")}</Link>
           </Button>
         </div>
@@ -57,11 +58,15 @@ export default async function HostingsPage(props: PageProps<"/[locale]/hostings"
               <section key={listing.id} className="space-y-3">
                 <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <img
+                  <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+                    <Image
                       src={listing.coverImage}
                       alt=""
-                      className="h-14 w-20 shrink-0 rounded-lg object-cover"
+                      fill
+                      sizes="80px"
+                      className="object-cover"
                     />
+                  </div>
                     <div className="min-w-0">
                       <Link
                         href={`/listings/${listing.id}`}

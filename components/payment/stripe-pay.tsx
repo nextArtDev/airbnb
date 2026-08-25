@@ -76,7 +76,7 @@ function PayForm({
       <Button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-rose-500 hover:bg-rose-600"
+        className="w-full rounded-xl bg-rose-600 hover:bg-rose-700"
       >
         {pending && <Spinner />}
         {t("payWithCard")}

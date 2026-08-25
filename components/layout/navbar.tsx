@@ -13,7 +13,7 @@ export async function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
         <Link
           href="/"
-          className="text-xl font-bold text-rose-500 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          className="text-xl font-bold text-rose-600 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
         >
           {t("brand")}
         </Link>
@@ -40,7 +40,7 @@ export async function Navbar() {
               <Button
                 asChild
                 size="sm"
-                className="rounded-full bg-rose-500 hover:bg-rose-600"
+                className="rounded-full bg-rose-600 hover:bg-rose-700"
               >
                 <Link href="/sign-up">{t("signUp")}</Link>
               </Button>

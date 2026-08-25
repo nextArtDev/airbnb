@@ -39,15 +39,20 @@ export function BookingSidebar({
   const ranges = useMemo(
     () =>
       bookedRanges.map((r) => ({
-        start: new Date(r.start),
-        end: new Date(r.end),
+        // Normalize stored UTC-midnight instants to local calendar days so the
+        // disabled matcher compares like-for-like with the picker's local dates.
+        start: new Date(r.start).toDateString(),
+        end: new Date(r.end).toDateString(),
       })),
     [bookedRanges],
   );
 
   const disabledMatcher = (date: Date) => {
     if (date < new Date(new Date().setHours(0, 0, 0, 0))) return true;
-    return ranges.some((r) => date >= r.start && date < r.end);
+    const day = date.toDateString();
+    return ranges.some(
+      (r) => day >= r.start && day < r.end,
+    );
   };
 
   function onReserve() {
@@ -63,7 +68,6 @@ export function BookingSidebar({
           checkOut: checkOut.toISOString(),
           guests,
         },
-        locale,
       );
       if (result.success && result.redirectTo) {
         router.push(result.redirectTo);
@@ -98,6 +102,8 @@ export function BookingSidebar({
       <div className="grid grid-cols-2 gap-2" dir="ltr">
         <DatePicker
           calendarType={calendarType}
+          confirmLabel={tc("confirm")}
+          cancelLabel={tc("cancel")}
           value={checkIn}
           onValueChange={(v) => {
             setCheckIn(v);
@@ -109,6 +115,8 @@ export function BookingSidebar({
         />
         <DatePicker
           calendarType={calendarType}
+          confirmLabel={tc("confirm")}
+          cancelLabel={tc("cancel")}
           value={checkOut}
           onValueChange={setCheckOut}
           placeholder={t("selectDates")}
@@ -157,7 +165,7 @@ export function BookingSidebar({
       <Button
         onClick={onReserve}
         disabled={pending || nights === 0 || isOwner}
-        className="mt-4 w-full rounded-xl bg-rose-500 hover:bg-rose-600"
+        className="mt-4 w-full rounded-xl bg-rose-600 hover:bg-rose-700"
       >
         {pending && <Spinner />}
         {isOwner ? t("selfBookingError") : t("reserve")}

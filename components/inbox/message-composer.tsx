@@ -51,7 +51,7 @@ export function MessageComposer({
         size="icon"
         disabled={pending || !body.trim()}
         aria-label={t("send")}
-        className="shrink-0 rounded-full bg-rose-500 hover:bg-rose-600"
+        className="shrink-0 rounded-full bg-rose-600 hover:bg-rose-700"
       >
         {pending ? <Spinner className="size-4" /> : <SendHorizonal className="rtl:-scale-x-100 size-4" />}
       </Button>
