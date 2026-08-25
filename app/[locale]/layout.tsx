@@ -60,7 +60,6 @@ export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
           {props.children}
           <Toaster position="bottom-center" />
         </NextIntlClientProvider>
-      </body>
-    </html>
+      </body>    </html>
   );
 }

@@ -142,6 +142,8 @@
     "booked": "Booked",
     "cancelReservation": "Cancel reservation",
     "cancelled": "Reservation cancelled.",
+    "cancelConfirm": "Are you sure you want to cancel this reservation?",
+    "trackingCode": "Tracking code",
     "overlapError": "Sorry, these dates were just booked by someone else. Please choose different dates.",
     "selfBookingError": "You cannot book your own listing.",
     "dateError": "Check-out must be after check-in.",
