@@ -4,6 +4,7 @@ import { CircleCheck, CircleX } from "lucide-react";
 import { CancelReservationButton } from "@/components/booking/cancel-reservation-button";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { ReviewForm } from "@/components/review/review-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -43,6 +44,7 @@ export default async function TripsPage(props: PageProps<"/[locale]/trips">) {
     orderBy: { createdAt: "desc" },
     include: {
       listing: { select: { id: true, title: true, coverImage: true, city: true } },
+      review: { select: { id: true } },
     },
   });
 
@@ -111,6 +113,13 @@ export default async function TripsPage(props: PageProps<"/[locale]/trips">) {
             />
           )}
         </div>
+        {!isUpcoming &&
+          reservation.paymentStatus === PaymentStatus.Paid &&
+          !reservation.review && (
+            <div className="w-full sm:col-span-2">
+              <ReviewForm reservationId={reservation.id} path="/trips" />
+            </div>
+          )}
       </div>
     );
   }

@@ -200,6 +200,7 @@
       "bedsLabel": "Beds",
       "bathsLabel": "Bathrooms",
       "priceLabel": "Price per night (Toman)",
+      "coverLabel": "Cover",
       "imagesHint": "Up to 10 photos; the first one becomes the cover.",
       "submitCreate": "Create listing",
       "submitUpdate": "Save changes"

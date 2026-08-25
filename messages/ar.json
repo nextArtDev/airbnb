@@ -200,6 +200,7 @@
       "bedsLabel": "الأسرّة",
       "bathsLabel": "الحمامات",
       "priceLabel": "السعر لكل ليلة (تومان)",
+      "coverLabel": "الغلاف",
       "imagesHint": "حتى 10 صور؛ الصورة الأولى ستكون الغلاف.",
       "submitCreate": "إنشاء العرض",
       "submitUpdate": "حفظ التغييرات"

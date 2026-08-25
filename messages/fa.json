@@ -200,6 +200,7 @@
       "bedsLabel": "تخت",
       "bathsLabel": "حمام",
       "priceLabel": "قیمت هر شب (تومان)",
+      "coverLabel": "کاور",
       "imagesHint": "حداکثر ۱۰ تصویر؛ اولین تصویر، کاور اصلی خواهد بود.",
       "submitCreate": "ثبت اقامتگاه",
       "submitUpdate": "ذخیره تغییرات"
