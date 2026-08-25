@@ -10,6 +10,7 @@ import { deleteListing } from "@/lib/actions/listings";
 
 export function DeleteListingButton({ listingId }: { listingId: string }) {
   const t = useTranslations("hosting");
+  const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
 
   function onDelete() {
@@ -17,7 +18,10 @@ export function DeleteListingButton({ listingId }: { listingId: string }) {
     startTransition(async () => {
       const result = await deleteListing(listingId);
       if (result.success) toast.success(t("deleted"));
-      else toast.error(result.message);
+      else {
+        const key = result.message ?? "";
+        toast.error(tc.has(`errors.${key}`) ? tc(`errors.${key}`) : tc("tryAgain"));
+      }
     });
   }
 
@@ -30,7 +34,7 @@ export function DeleteListingButton({ listingId }: { listingId: string }) {
       aria-label={t("deleteConfirmTitle")}
       className="text-destructive hover:bg-destructive/10"
     >
-      {pending ? <Spinner className="size-3.5" /> : <Trash2 className="size-4" />}
+      {pending ? <Spinner aria-label={tc("loading")} className="size-3.5" /> : <Trash2 className="size-4" />}
     </Button>
   );
 }

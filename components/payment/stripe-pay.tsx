@@ -27,6 +27,7 @@ function PayForm({
   stripe: Stripe;
 }) {
   const t = useTranslations("booking");
+  const tc = useTranslations("common");
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -78,7 +79,7 @@ function PayForm({
         disabled={pending}
         className="w-full rounded-xl bg-rose-600 hover:bg-rose-700"
       >
-        {pending && <Spinner />}
+        {pending && <Spinner aria-label={tc("loading")} />}
         {t("payWithCard")}
       </Button>
     </form>
@@ -87,6 +88,7 @@ function PayForm({
 
 export function StripePay({ reservationId }: { reservationId: string }) {
   const t = useTranslations("booking");
+  const tc = useTranslations("common");
   const [state, setState] = useState<{
     clientSecret: string;
     publicKey: string;
@@ -118,7 +120,7 @@ export function StripePay({ reservationId }: { reservationId: string }) {
   if (!state || !stripePromise) {
     return (
       <div className="flex justify-center py-6">
-        <Spinner />
+        <Spinner aria-label={tc("loading")} />
       </div>
     );
   }
@@ -139,11 +141,12 @@ export function StripePay({ reservationId }: { reservationId: string }) {
 function CheckoutInner({ reservationId }: { reservationId: string }) {
   const stripe = useStripe();
   const elements = useElements();
+  const tc = useTranslations("common");
 
   if (!stripe || !elements) {
     return (
       <div className="flex justify-center py-6">
-        <Spinner />
+        <Spinner aria-label={tc("loading")} />
       </div>
     );
   }

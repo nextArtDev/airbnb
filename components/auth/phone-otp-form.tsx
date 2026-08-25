@@ -27,6 +27,7 @@ const RESEND_SECONDS = 60;
 
 export function PhoneOtpForm() {
   const t = useTranslations("auth");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [phoneInput, setPhoneInput] = useState("");
@@ -140,7 +141,7 @@ export function PhoneOtpForm() {
               disabled={pending || code.length !== 6}
               className="w-full"
             >
-              {pending && <Spinner />}
+              {pending && <Spinner aria-label={tc("loading")} />}
               {t("verifyBtn")}
             </Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -198,7 +199,7 @@ export function PhoneOtpForm() {
           </div>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>
-            {pending && <Spinner />}
+            {pending && <Spinner aria-label={tc("loading")} />}
             {t("sendCode")}
           </Button>
         </form>

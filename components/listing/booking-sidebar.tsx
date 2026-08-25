@@ -167,7 +167,7 @@ export function BookingSidebar({
         disabled={pending || nights === 0 || isOwner}
         className="mt-4 w-full rounded-xl bg-rose-600 hover:bg-rose-700"
       >
-        {pending && <Spinner />}
+        {pending && <Spinner aria-label={tc("loading")} />}
         {isOwner ? t("selfBookingError") : t("reserve")}
       </Button>
     </div>

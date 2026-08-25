@@ -54,7 +54,7 @@ export async function createListing(input: unknown): Promise<MutationResult> {
     const allImages = [data.coverImage, ...data.images];
     for (const url of allImages) {
       if (!url.startsWith("/api/uploads/")) {
-        return { success: false, message: "invalid image" };
+        return { success: false, message: "invalidImage" };
       }
     }
 
@@ -91,7 +91,7 @@ export async function createListing(input: unknown): Promise<MutationResult> {
     };
   } catch (error) {
     console.error("createListing failed:", error);
-    return { success: false, message: "server error" };
+    return { success: false, message: "serverError" };
   }
 }
 
@@ -130,7 +130,7 @@ export async function updateListing(
         images: data.images,
       },
     });
-    if (result.count === 0) return { success: false, message: "not found" };
+    if (result.count === 0) return { success: false, message: "notFound" };
 
     revalidatePath("/");
     revalidatePath(`/listings/${listingId}`);
@@ -138,7 +138,7 @@ export async function updateListing(
     return { success: true, message: "updated" };
   } catch (error) {
     console.error("updateListing failed:", error);
-    return { success: false, message: "server error" };
+    return { success: false, message: "serverError" };
   }
 }
 
@@ -155,7 +155,7 @@ export async function deleteListing(
       select: { userId: true, coverImage: true, images: true },
     });
     if (!listing || listing.userId !== user.id) {
-      return { success: false, message: "not found" };
+      return { success: false, message: "notFound" };
     }
 
     await prisma.listing.delete({ where: { id: listingId } });
@@ -177,6 +177,6 @@ export async function deleteListing(
     return { success: true, message: "deleted" };
   } catch (error) {
     console.error("deleteListing failed:", error);
-    return { success: false, message: "server error" };
+    return { success: false, message: "serverError" };
   }
 }

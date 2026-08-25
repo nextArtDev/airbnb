@@ -154,7 +154,8 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
         : await createListing(payload);
 
       if (!result.success) {
-        toast.error(result.message ?? tc("tryAgain"));
+        const key = result.message ?? "";
+        toast.error(tc.has(`errors.${key}`) ? tc(`errors.${key}`) : tc("tryAgain"));
         return;
       }
       toast.success(listingId ? t("updated") : t("created"));
@@ -238,7 +239,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             <Input id="address" {...form.register("address")} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="latitude">Latitude</Label>
+            <Label htmlFor="latitude">{t("form.latitudeLabel")}</Label>
             <Input
               id="latitude"
               type="number"
@@ -251,7 +252,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="longitude">Longitude</Label>
+            <Label htmlFor="longitude">{t("form.longitudeLabel")}</Label>
             <Input
               id="longitude"
               type="number"
@@ -345,7 +346,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             onClick={() => fileInputRef.current?.click()}
             className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-10 text-center text-muted-foreground transition hover:border-foreground/50 hover:text-foreground"
           >
-            {uploading ? <Spinner /> : <Upload className="size-6" />}
+            {uploading ? <Spinner aria-label={tc("loading")} /> : <Upload className="size-6" />}
             <span className="text-sm">{t("form.imagesHint")}</span>
             <input
               ref={fileInputRef}
@@ -451,7 +452,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
             disabled={pending}
             className="bg-rose-600 hover:bg-rose-700"
           >
-            {pending && <Spinner />}
+            {pending && <Spinner aria-label={tc("loading")} />}
             {listingId ? t("form.submitUpdate") : t("form.submitCreate")}
           </Button>
         )}

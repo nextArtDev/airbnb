@@ -24,6 +24,7 @@ export function HeartButton({
   authenticated,
 }: HeartButtonProps) {
   const t = useTranslations("favorites");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [favorited, setFavorited] = useState(initialFavorited);
   const [pending, startTransition] = useTransition();
@@ -60,7 +61,7 @@ export function HeartButton({
       className="absolute end-2 top-2 z-10 grid size-11 place-items-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/50 disabled:opacity-70 motion-reduce:transition-none"
     >
       {pending ? (
-        <Spinner className="size-4" />
+        <Spinner aria-label={tc("loading")} className="size-4" />
       ) : (
         <Heart
           className={cn(

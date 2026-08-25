@@ -53,7 +53,7 @@ export function MessageComposer({
         aria-label={t("send")}
         className="shrink-0 rounded-full bg-rose-600 hover:bg-rose-700"
       >
-        {pending ? <Spinner className="size-4" /> : <SendHorizonal className="rtl:-scale-x-100 size-4" />}
+        {pending ? <Spinner aria-label={tc("loading")} className="size-4" /> : <SendHorizonal className="rtl:-scale-x-100 size-4" />}
       </Button>
     </form>
   );

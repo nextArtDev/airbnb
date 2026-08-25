@@ -9,6 +9,7 @@ import { startZarinpalPayment } from "@/lib/actions/payments";
 
 export function ZarinpalPay({ reservationId }: { reservationId: string }) {
   const t = useTranslations("booking");
+  const tc = useTranslations("common");
   const [pending, setPending] = useState(false);
 
   async function onPay() {
@@ -31,7 +32,7 @@ export function ZarinpalPay({ reservationId }: { reservationId: string }) {
       disabled={pending}
       className="w-full rounded-xl bg-rose-600 hover:bg-rose-700"
     >
-      {pending && <Spinner />}
+      {pending && <Spinner aria-label={tc("loading")} />}
       {t("payWithZarinpal")}
     </Button>
   );

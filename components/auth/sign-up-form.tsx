@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 export function SignUpForm() {
   const t = useTranslations("auth");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -70,7 +71,7 @@ export function SignUpForm() {
               id="email"
               type="email"
               dir="ltr"
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -90,7 +91,7 @@ export function SignUpForm() {
           </div>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>
-            {pending && <Spinner />}
+            {pending && <Spinner aria-label={tc("loading")} />}
             {t("signUpBtn")}
           </Button>
         </form>

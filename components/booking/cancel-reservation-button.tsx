@@ -38,7 +38,7 @@ export function CancelReservationButton({
       disabled={pending}
       className="rounded-full"
     >
-      {pending && <Spinner className="size-3" />}
+      {pending && <Spinner aria-label={tb("loading")} className="size-3" />}
       {t("cancelReservation")}
     </Button>
   );

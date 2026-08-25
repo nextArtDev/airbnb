@@ -32,6 +32,14 @@
     "tryAgain": "Try again",
     "notFound": "The page you were looking for could not be found.",
     "goHome": "Go home",
+    "genericError": "Something went wrong. Please try again.",
+    "errors": {
+      "unauthorized": "You must be signed in.",
+      "notFound": "Not found.",
+      "serverError": "Something went wrong. Please try again.",
+      "invalid": "Invalid input.",
+      "invalidImage": "Invalid image."
+    },
     "increase": "Increase",
     "decrease": "Decrease",
     "toman": "Toman",
@@ -57,6 +65,7 @@
     "emailTitle": "Welcome back",
     "emailDesc": "Sign in with your email and password",
     "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
     "signInBtn": "Sign in",
     "invalidCreds": "Invalid email or password.",
@@ -205,6 +214,8 @@
       "priceLabel": "Price per night (Toman)",
       "coverLabel": "Cover",
       "imagesHint": "Up to 10 photos; the first one becomes the cover.",
+      "latitudeLabel": "Latitude",
+      "longitudeLabel": "Longitude",
       "submitCreate": "Create listing",
       "submitUpdate": "Save changes"
     },
@@ -235,5 +246,22 @@
     "support": "Support",
     "terms": "Terms",
     "privacy": "Privacy"
+  },
+  "chatbot": {
+    "title": "Safarino Assistant",
+    "subtitle": "Answers about booking, payments and hosting",
+    "placeholder": "Type your question...",
+    "send": "Send",
+    "close": "Close",
+    "suggestions": {
+      "howToBook": "How do I book a stay?",
+      "payments": "What payment methods are supported?",
+      "cancel": "How do cancellations work?",
+      "becomeHost": "How do I become a host?"
+    },
+    "notConfigured": "The AI assistant is not enabled yet. For support, please use Messages.",
+    "rateLimited": "Too many messages - please wait a moment and try again.",
+    "error": "Could not reach the assistant. Please try again.",
+    "disclaimer": "Answers are AI-generated and may contain mistakes."
   }
 }
