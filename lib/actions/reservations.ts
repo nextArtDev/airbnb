@@ -84,34 +84,48 @@ export async function createReservation(
     );
     const totalPrice = roundToman(nights * listing.pricePerNight);
 
-    const created = await prisma.$transaction(async (tx) => {
-      // Re-check overlap inside the transaction to narrow the race window.
-      const stillFree = await tx.reservation.count({
-        where: {
-          listingId,
-          paymentStatus: { in: [PaymentStatus.Pending, PaymentStatus.Paid] },
-          startDate: { lt: checkOut },
-          endDate: { gt: checkIn },
-        },
-      });
-      if (stillFree > 0) throw new Error("overlapError");
+    // Serializable isolation closes the count-then-insert race: two guests
+    // picking the same dates cannot both commit. P2034 = write conflict.
+    let created: { id: string } | null = null;
+    for (let attempt = 0; attempt < 3 && !created; attempt++) {
+      try {
+        created = await prisma.$transaction(
+          async (tx) => {
+            const stillFree = await tx.reservation.count({
+              where: {
+                listingId,
+                paymentStatus: { in: [PaymentStatus.Pending, PaymentStatus.Paid] },
+                startDate: { lt: checkOut },
+                endDate: { gt: checkIn },
+              },
+            });
+            if (stillFree > 0) throw new Error("overlapError");
 
-      return tx.reservation.create({
-        data: {
-          listingId,
-          userId: user.id,
-          startDate: checkIn,
-          endDate: checkOut,
-          nights,
-          guests,
-          totalPrice,
-          // Lock FX at creation time; Stripe derives cents from this exact rate.
-          exchangeRate: FX.usdToToman,
-          paymentStatus: PaymentStatus.Pending,
-        },
-        select: { id: true },
-      });
-    });
+            return tx.reservation.create({
+              data: {
+                listingId,
+                userId: user.id,
+                startDate: checkIn,
+                endDate: checkOut,
+                nights,
+                guests,
+                totalPrice,
+                // Lock FX at creation time; Stripe derives cents from this exact rate.
+                exchangeRate: FX.usdToToman,
+                paymentStatus: PaymentStatus.Pending,
+              },
+              select: { id: true },
+            });
+          },
+          { isolationLevel: "Serializable" },
+        );
+      } catch (txError) {
+        const code = (txError as { code?: string })?.code;
+        if (code === "P2034") continue; // serialization conflict - retry
+        throw txError;
+      }
+    }
+    if (!created) return { success: false, message: "overlapError" };
 
     return {
       success: true,

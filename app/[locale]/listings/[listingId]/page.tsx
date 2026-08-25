@@ -96,6 +96,7 @@ async function ListingContent({
             listingId={listingId}
             initialFavorited={favoriteIds.has(listingId)}
             path={`/listings/${listingId}`}
+            authenticated={Boolean(user)}
           />
         </div>
 

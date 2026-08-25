@@ -13,12 +13,15 @@ interface HeartButtonProps {
   listingId: string;
   initialFavorited: boolean;
   path: string;
+  /** Passed from the server - the session cookie is httpOnly and invisible to JS. */
+  authenticated: boolean;
 }
 
 export function HeartButton({
   listingId,
   initialFavorited,
   path,
+  authenticated,
 }: HeartButtonProps) {
   const t = useTranslations("favorites");
   const router = useRouter();
@@ -29,7 +32,7 @@ export function HeartButton({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!document.cookie.includes("better-auth.session_token")) {
+    if (!authenticated) {
       router.push("/sign-in");
       return;
     }

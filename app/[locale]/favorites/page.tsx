@@ -53,6 +53,7 @@ export default async function FavoritesPage(
                 listing={listing}
                 rating={averageRating(listing.reviews)}
                 favorited
+                authenticated
               />
             ))}
           </div>

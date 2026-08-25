@@ -11,10 +11,8 @@ import { cn } from "@/lib/utils";
 
 export function ReviewForm({
   reservationId,
-  path,
 }: {
   reservationId: string;
-  path: string;
 }) {
   const t = useTranslations("reviews");
   const [rating, setRating] = useState(5);

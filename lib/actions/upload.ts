@@ -3,7 +3,6 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { join, resolve, sep } from "path";
 import { mkdir, unlink, writeFile } from "fs/promises";
-import prisma from "@/lib/prisma";
 
 const UPLOAD_DIR =
   process.env.NODE_ENV === "production"

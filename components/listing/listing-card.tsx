@@ -15,12 +15,14 @@ interface ListingCardProps {
   };
   rating?: number | null;
   favorited?: boolean;
+  authenticated?: boolean;
 }
 
 export function ListingCard({
   listing,
   rating,
   favorited = false,
+  authenticated = false,
 }: ListingCardProps) {
   const t = useTranslations("listing");
   const locale = useLocale();
@@ -67,6 +69,7 @@ export function ListingCard({
         listingId={listing.id}
         initialFavorited={favorited}
         path="/"
+        authenticated={authenticated}
       />
     </div>
   );

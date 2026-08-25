@@ -30,7 +30,7 @@ export interface StartPaymentResult {
 const APP_URL = () =>
   process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-async function loadOwnedPendingReservation(reservationId: string, userId: string) {
+async function loadOwnedPendingReservation(reservationId: string) {
   return prisma.reservation.findUnique({
     where: { id: reservationId },
     select: {
@@ -57,7 +57,7 @@ export async function startZarinpalPayment(
   try {
     await checkPaymentRateLimit(user.id);
 
-    const reservation = await loadOwnedPendingReservation(reservationId, user.id);
+    const reservation = await loadOwnedPendingReservation(reservationId);
     if (!reservation) return { success: false, message: "notFound" };
     if (reservation.userId !== user.id)
       return { success: false, message: "unauthorized" };
@@ -232,7 +232,7 @@ export async function createStripePaymentIntent(
   try {
     await checkPaymentRateLimit(user.id);
 
-    const reservation = await loadOwnedPendingReservation(reservationId, user.id);
+    const reservation = await loadOwnedPendingReservation(reservationId);
     if (!reservation) return { success: false, message: "notFound" };
     if (reservation.userId !== user.id)
       return { success: false, message: "unauthorized" };

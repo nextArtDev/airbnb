@@ -61,6 +61,7 @@ async function ListingGrid({ filters }: { filters: HomeFilters }) {
           listing={listing}
           rating={averageRating(listing.reviews)}
           favorited={favoriteIds.has(listing.id)}
+          authenticated={Boolean(user)}
         />
       ))}
     </div>

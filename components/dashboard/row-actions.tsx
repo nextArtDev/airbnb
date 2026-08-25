@@ -22,19 +22,25 @@ export function BanButtons({
 }) {
   const [pending, startTransition] = useTransition();
 
+  function run(fn: () => Promise<{ success: boolean }>, okMsg: string) {
+    startTransition(async () => {
+      try {
+        const res = await fn();
+        if (res.success) toast.success(okMsg);
+        else toast.error("انجام نشد");
+      } catch {
+        toast.error("خطای دسترسی یا سرور");
+      }
+    });
+  }
+
   if (!banned) {
     return (
       <Button
         variant="outline"
         size="xs"
         disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            const res = await toggleUserBan(userId);
-            if (res.success) toast.success("کاربر مسدود شد");
-            else toast.error("انجام نشد");
-          })
-        }
+        onClick={() => run(() => toggleUserBan(userId), "کاربر مسدود شد")}
       >
         مسدودسازی
       </Button>
@@ -46,13 +52,7 @@ export function BanButtons({
       variant="outline"
       size="xs"
       disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          const res = await unbanUser(userId);
-          if (res.success) toast.success("رفع مسدودی شد");
-          else toast.error("انجام نشد");
-        })
-      }
+      onClick={() => run(() => unbanUser(userId), "رفع مسدودی شد")}
     >
       رفع مسدودی
     </Button>
@@ -75,8 +75,12 @@ export function PublishToggleButton({
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
-          await setListingPublished(listingId, !published);
-          toast.success(published ? "از انتشار خارج شد" : "منتشر شد");
+          try {
+            await setListingPublished(listingId, !published);
+            toast.success(published ? "از انتشار خارج شد" : "منتشر شد");
+          } catch {
+            toast.error("خطای دسترسی یا سرور");
+          }
         })
       }
     >
@@ -97,12 +101,16 @@ export function AdminDeleteButton({
   function run() {
     if (!window.confirm("مطمئن هستید؟ این عمل بازگشت‌پذیر نیست.")) return;
     startTransition(async () => {
-      let ok = false;
-      if (kind === "listing") ok = (await adminDeleteListing(id)).success;
-      if (kind === "review") ok = (await adminDeleteReview(id)).success;
-      if (kind === "reservation") ok = (await cancelStaleReservation(id)).success;
-      if (ok) toast.success("انجام شد");
-      else toast.error("انجام نشد");
+      try {
+        let ok = false;
+        if (kind === "listing") ok = (await adminDeleteListing(id)).success;
+        if (kind === "review") ok = (await adminDeleteReview(id)).success;
+        if (kind === "reservation") ok = (await cancelStaleReservation(id)).success;
+        if (ok) toast.success("انجام شد");
+        else toast.error("انجام نشد");
+      } catch {
+        toast.error("خطای دسترسی یا سرور");
+      }
     });
   }
 

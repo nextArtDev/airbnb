@@ -117,7 +117,7 @@ export default async function TripsPage(props: PageProps<"/[locale]/trips">) {
           reservation.paymentStatus === PaymentStatus.Paid &&
           !reservation.review && (
             <div className="w-full sm:col-span-2">
-              <ReviewForm reservationId={reservation.id} path="/trips" />
+              <ReviewForm reservationId={reservation.id} />
             </div>
           )}
       </div>

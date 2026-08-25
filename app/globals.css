@@ -131,3 +131,10 @@
     @apply font-sans;
   }
 }
+/* Hide scrollbars while keeping overflow scrollable (category chips row). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
