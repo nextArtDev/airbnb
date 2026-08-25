@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import "@ncdai/react-wheel-picker/style.css"
 

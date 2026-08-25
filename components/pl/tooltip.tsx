@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { DirectionProvider } from "@base-ui/react/direction-provider"
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"

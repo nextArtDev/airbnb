@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- shadcn scaffolding: embla/mobile-query sync in effect is intentional */
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768

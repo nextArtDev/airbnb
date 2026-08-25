@@ -19,52 +19,59 @@ function StatCard({
   );
 }
 
-export default async function DashboardOverviewPage() {
+async function getStats() {
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [users, listings, paid, pending, revenueAgg, monthRevenue] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.listing.count(),
-      prisma.reservation.findMany({
-        where: { paymentStatus: PaymentStatus.Paid },
-        select: { totalPrice: true },
-      }),
-      prisma.reservation.count({ where: { paymentStatus: PaymentStatus.Pending } }),
-      prisma.paymentDetails.aggregate({
-        where: { status: "Paid", method: "zarinpal" },
-        _sum: { amount: true },
-      }),
-      prisma.reservation.aggregate({
-        where: { paymentStatus: PaymentStatus.Paid, paidAt: { gte: since30 } },
-        _sum: { totalPrice: true },
-      }),
-    ]);
+  const [users, listings, paid, pending, monthRevenue] = await Promise.all([
+    prisma.user.count(),
+    prisma.listing.count(),
+    prisma.reservation.findMany({
+      where: { paymentStatus: PaymentStatus.Paid },
+      select: { totalPrice: true },
+    }),
+    prisma.reservation.count({ where: { paymentStatus: PaymentStatus.Pending } }),
+    prisma.reservation.aggregate({
+      where: { paymentStatus: PaymentStatus.Paid, paidAt: { gte: since30 } },
+      _sum: { totalPrice: true },
+    }),
+  ]);
 
-  const totalToman = paid.reduce((sum, r) => sum + r.totalPrice, 0);
+  return {
+    users,
+    listings,
+    paidCount: paid.length,
+    totalToman: paid.reduce((sum, r) => sum + r.totalPrice, 0),
+    pending,
+    monthToman: monthRevenue._sum.totalPrice ?? 0,
+  };
+}
+
+export default async function DashboardOverviewPage() {
+  const stats = await getStats();
+  const fa = (n: number) => n.toLocaleString("fa-IR");
 
   return (
     <>
       <h1 className="text-xl font-bold">نمای کلی</h1>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <StatCard label="کاربران" value={users.toLocaleString("fa-IR")} />
-        <StatCard label="اقامتگاه‌ها" value={listings.toLocaleString("fa-IR")} />
+        <StatCard label="کاربران" value={fa(stats.users)} />
+        <StatCard label="اقامتگاه‌ها" value={fa(stats.listings)} />
         <StatCard
           label="رزروهای در انتظار پرداخت"
-          value={pending.toLocaleString("fa-IR")}
+          value={fa(stats.pending)}
         />
         <StatCard
           label="رزروهای پرداخت‌شده"
-          value={paid.length.toLocaleString("fa-IR")}
+          value={fa(stats.paidCount)}
         />
         <StatCard
           label="درآمد کل (تومان)"
-          value={totalToman.toLocaleString("fa-IR")}
+          value={fa(stats.totalToman)}
           hint="مجموع رزروهای Paid"
         />
         <StatCard
           label="درآمد ۳۰ روز اخیر (تومان)"
-          value={(monthRevenue._sum.totalPrice ?? 0).toLocaleString("fa-IR")}
+          value={fa(stats.monthToman)}
         />
       </div>
     </>

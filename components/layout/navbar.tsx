@@ -1,11 +1,11 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher, UserMenu } from "@/components/layout/user-menu";
 
 export async function Navbar() {
-  const t = useTranslations("nav");
+  const t = await getTranslations("nav");
   const user = await getCurrentUser();
 
   return (

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { DayPicker as PersianDayPicker, faIR } from "@daypicker/persian"
 import {

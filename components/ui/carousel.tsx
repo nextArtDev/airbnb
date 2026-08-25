@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- shadcn scaffolding: embla/mobile-query sync in effect is intentional */
 "use client"
 
 import * as React from "react"
