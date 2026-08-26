@@ -134,7 +134,7 @@ async function ListingContent({
 
             {detail.listing.amenities.length > 0 && (
               <section>
-                <h2 className="mb-3 text-lg font-semibold">{t("amenities")}</h2>
+                <h2 className="mb-3 text-lg font-semibold">{t("amenitiesTitle")}</h2>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {detail.listing.amenities.map((key) => {
                     const amenity = AMENITIES.find((a) => a.key === key);

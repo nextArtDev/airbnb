@@ -40,7 +40,8 @@
       "invalid": "ورودی نامعتبر.",
       "invalidImage": "تصویر نامعتبر."
     },
-    "increase": "افزایش",
+        "increase": "افزایش",
+    "clear": "پاک کردن",
     "decrease": "کاهش",
     "toman": "تومان",
     "night": "شب",
@@ -89,7 +90,8 @@
     "checkOut": "تاریخ خروج",
     "who": "چند نفر؟",
     "addGuests": "افزودن مهمان",
-    "searchButton": "جستجو",
+        "searchButton": "جستجو",
+    "addDates": "تاریخ‌ها را انتخاب کنید",
     "popularCities": "شهرهای محبوب",
     "exploreCategories": "کاوش بر اساس دسته‌بندی",
     "allListings": "همه اقامتگاه‌ها",
@@ -113,7 +115,8 @@
     "bedrooms": "اتاق خواب",
     "beds": "تخت",
     "baths": "حمام",
-    "about": "درباره این اقامتگاه",
+      "about": "درباره این اقامتگاه",
+      "amenitiesTitle": "امکانات",
     "amenities": "امکانات",
     "location": "موقعیت مکانی",
     "reviews": "نظرات",
@@ -160,7 +163,10 @@
     "selfBookingError": "نمی‌توانید اقامتگاه خودتان را رزرو کنید.",
     "dateError": "تاریخ خروج باید بعد از تاریخ ورود باشد.",
     "pastDateError": "تاریخ ورود نمی‌تواند در گذشته باشد.",
-    "guestCountError": "تعداد مهمان‌ها بیش از ظرفیت اقامتگاه است."
+      "guestCountError": "تعداد مهمان‌ها بیش از ظرفیت اقامتگاه است.",
+      "selectDates": "انتخاب تاریخ",
+      "reserve": "رزرو",
+      "dates": "تاریخ‌ها"
   },
   "trips": {
     "title": "سفرهای من",

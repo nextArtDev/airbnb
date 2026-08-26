@@ -40,7 +40,8 @@
       "invalid": "مدخل غير صالح.",
       "invalidImage": "صورة غير صالحة."
     },
-    "increase": "زيادة",
+        "increase": "زيادة",
+    "clear": "مسح",
     "decrease": "تقليل",
     "toman": "تومان",
     "night": "ليلة",
@@ -89,7 +90,8 @@
     "checkOut": "تاريخ المغادرة",
     "who": "كم شخصاً؟",
     "addGuests": "إضافة ضيوف",
-    "searchButton": "بحث",
+        "searchButton": "بحث",
+    "addDates": "أضف التواريخ",
     "popularCities": "وجهات شائعة",
     "exploreCategories": "استكشف بحسب الفئة",
     "allListings": "جميع أماكن الإقامة",
@@ -113,7 +115,8 @@
     "bedrooms": "غرف نوم",
     "beds": "أسرّة",
     "baths": "حمامات",
-    "about": "نبذة عن هذا المكان",
+      "about": "نبذة عن هذا المكان",
+      "amenitiesTitle": "المرافق",
     "amenities": "المرافق",
     "location": "الموقع",
     "reviews": "التقييمات",
@@ -160,7 +163,10 @@
     "selfBookingError": "لا يمكنك حجز مسکنك الخاص.",
     "dateError": "يجب أن يكون تاريخ المغادرة بعد تاريخ الوصول.",
     "pastDateError": "لا يمكن أن يكون تاريخ الوصول في الماضي.",
-    "guestCountError": "عدد الضيوف يتجاوز سعة هذا المكان."
+      "guestCountError": "عدد الضيوف يتجاوز سعة هذا المكان.",
+      "selectDates": "اختر التواريخ",
+      "reserve": "احجز",
+      "dates": "التواريخ"
   },
   "trips": {
     "title": "رحلاتي",
