@@ -41,8 +41,25 @@ export const listingFormSchema = z.object({
   address: z.string().trim().max(300).optional().or(z.literal("")),
   latitude: z.number("invalid latitude").min(-90).max(90).nullable().optional(),
   longitude: z.number("invalid longitude").min(-180).max(180).nullable().optional(),
-  coverImage: z.string().url().min(1),
-  images: z.array(z.string().url()).max(9).default([]),
+  coverImage: z
+    .string()
+    .min(1)
+    .refine(
+      (v) => /^https?:\/\/|^\/api\/uploads\//.test(v),
+      "image must be an absolute URL or /api/uploads/ path",
+    ),
+  images: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .refine(
+          (v) => /^https?:\/\/|^\/api\/uploads\//.test(v),
+          "image must be an absolute URL or /api/uploads/ path",
+        ),
+    )
+    .max(9)
+    .default([]),
 });
 
 export type ListingFormValues = z.input<typeof listingFormSchema>;
