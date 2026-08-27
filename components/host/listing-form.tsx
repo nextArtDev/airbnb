@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import Image from 'next/image'
 import { Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
@@ -94,6 +94,10 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
       images: [],
       ...defaultValues,
     },
+  })
+  const selectedCategory = useWatch({
+    control: form.control,
+    name: 'category',
   })
 
   const [pending, startTransition] = useTransition()
@@ -239,7 +243,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
                 }
                 className={cn(
                   'flex flex-col items-center gap-2 rounded-xl border p-4 text-sm transition hover:border-foreground/50',
-                  form.watch('category') === value &&
+                  selectedCategory === value &&
                     'border-foreground bg-accent font-semibold',
                 )}
               >

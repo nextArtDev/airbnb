@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "title": "Safarino | Vacation Rentals",
-    "template": "%s | Safarino",
+    "title": "Arat Real State | Vacation Rentals",
+    "template": "%s | Arat Real State",
     "description": "Book villas, eco-lodges and unique stays across Iran and around the world"
   },
   "nav": {
-    "brand": "Safarino",
+    "brand": "Arat Real State",
     "trips": "My trips",
     "favorites": "Wishlist",
     "hostings": "My listings",
@@ -248,13 +248,13 @@
     "sent": "Message sent."
   },
   "footer": {
-    "rights": "© {year} Safarino — All rights reserved.",
+    "rights": "© {year} Arat Real State — All rights reserved.",
     "support": "Support",
     "terms": "Terms",
     "privacy": "Privacy"
   },
   "chatbot": {
-    "title": "Safarino Assistant",
+    "title": "Arat Real State Assistant",
     "subtitle": "Answers about booking, payments and hosting",
     "placeholder": "Type your question...",
     "send": "Send",

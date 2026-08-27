@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
+// import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
@@ -26,7 +27,7 @@ export function CategoryBar({
   filters,
 }: CategoryBarProps) {
   const t = useTranslations('home')
-  const locale = useLocale()
+  // const locale = useLocale()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
