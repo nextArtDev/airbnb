@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+.next
+.vercel
+
+# Dev/build artifacts
+*.tsbuildinfo
+next-env.d.ts
+
+# Git
+.git
+.gitignore
+
+# Dev env files
+.env*
+!.env.production.example
+
+# IDE
+.vscode
+.idea
+
+# Docker files (don't copy into image)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# READMEs and docs
+README.md
+*.md
+
+# Tests and scripts not needed in image
+coverage
+scripts/deploy
+
+# Skills directories
+.agents
+.claude
+.windsurf
+
+# Uploads will come from volume
+uploads
