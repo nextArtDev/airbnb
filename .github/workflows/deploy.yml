@@ -8,6 +8,7 @@ on:
 
 env:
   NODE_VERSION: "20"
+  PROJECT_NAME: airbnb  # Change this per project
 
 jobs:
   # -----------------------------------------------------------
@@ -36,7 +37,7 @@ jobs:
         run: bunx tsc --noEmit
 
   # -----------------------------------------------------------
-  # 2. Deploy to VPS (only on push to main, after checks pass)
+  # 2. Deploy to VPS
   # -----------------------------------------------------------
   deploy:
     name: Deploy to VPS
@@ -45,7 +46,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
     concurrency:
-      group: deploy-production
+      group: deploy-${{ env.PROJECT_NAME }}-production
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -60,30 +61,34 @@ jobs:
           script: |
             set -euo pipefail
 
-            DEPLOY_DIR="/opt/airbnb"
-            echo "=== Pulling latest code ==="
+            PROJECT="${{ env.PROJECT_NAME }}"
+            DEPLOY_DIR="/opt/$PROJECT"
+
+            echo "=== Deploying $PROJECT ==="
             cd "$DEPLOY_DIR"
+
+            echo "--- Pulling latest code ---"
             git pull origin main
 
-            echo "=== Running migrations ==="
+            echo "--- Running migrations ---"
             docker compose exec -T app bunx prisma migrate deploy
 
-            echo "=== Rebuilding and restarting ==="
+            echo "--- Rebuilding and restarting ---"
             docker compose build --no-cache app
             docker compose up -d --force-recreate app
 
-            echo "=== Cleaning up old images ==="
+            echo "--- Cleaning up ---"
             docker image prune -f
 
-            echo "=== Waiting for health check ==="
+            echo "--- Health check ---"
             for i in $(seq 1 30); do
               if docker compose exec -T app bun -e "fetch('http://localhost:3000').then(r=>{if(!r.ok)throw 1}).catch(()=>process.exit(1))" 2>/dev/null; then
-                echo "=== App is healthy ==="
+                echo "=== $PROJECT is healthy ==="
                 exit 0
               fi
               echo "Waiting... ($i/30)"
               sleep 2
             done
-            echo "=== Health check failed ==="
+            echo "=== Health check failed for $PROJECT ==="
             docker compose logs app --tail=50
             exit 1

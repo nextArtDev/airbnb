@@ -1,46 +1,37 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------
-# One-time server setup for ferdowsi.cloud
-# Run as root on the VPS
-# Usage: bash scripts/deploy/setup-server.sh
+# Multi-project VPS setup for ferdowsi.cloud
+# Run as root on the VPS (one time)
 # -----------------------------------------------------------
 set -euo pipefail
 
 DOMAIN="ferdowsi.cloud"
-DEPLOY_DIR="/opt/airbnb"
+SHARED_DIR="/opt/shared"
 APP_USER="deploy"
 
 echo "========================================="
-echo "  VPS Setup for $DOMAIN"
+echo "  Multi-Project VPS Setup"
+echo "  Domain: $DOMAIN"
 echo "========================================="
 
 # -----------------------------------------------------------
 # 1. System updates + essential packages
 # -----------------------------------------------------------
-echo "[1/8] Updating system packages..."
+echo "[1/9] Updating system packages..."
 apt-get update -y && apt-get upgrade -y
 apt-get install -y \
-  curl \
-  wget \
-  git \
-  ufw \
-  fail2ban \
-  unattended-upgrades \
-  apt-transport-https \
-  ca-certificates \
-  gnupg \
-  lsb-release \
-  jq
+  curl wget git jq \
+  ufw fail2ban unattended-upgrades \
+  apt-transport-https ca-certificates gnupg lsb-release
 
 # -----------------------------------------------------------
 # 2. Create non-root deploy user
 # -----------------------------------------------------------
-echo "[2/8] Creating deploy user..."
+echo "[2/9] Creating deploy user..."
 if ! id "$APP_USER" &>/dev/null; then
   adduser --disabled-password --gecos "" "$APP_USER"
   usermod -aG sudo "$APP_USER"
-  # Allow passwordless sudo for deploy operations
-  echo "$APP_USER ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose, /usr/bin/systemctl restart docker, /opt/airbnb/scripts/deploy/*" \
+  echo "$APP_USER ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker compose, /usr/bin/systemctl, /opt/*/scripts/deploy/*" \
     > "/etc/sudoers.d/$APP_USER"
   chmod 0440 "/etc/sudoers.d/$APP_USER"
 fi
@@ -48,20 +39,18 @@ fi
 # -----------------------------------------------------------
 # 3. Install Docker + Docker Compose
 # -----------------------------------------------------------
-echo "[3/8] Installing Docker..."
+echo "[3/9] Installing Docker..."
 if ! command -v docker &>/dev/null; then
   curl -fsSL https://get.docker.com | sh
   systemctl enable docker
   systemctl start docker
 fi
-
-echo "Adding deploy user to docker group..."
 usermod -aG docker "$APP_USER"
 
 # -----------------------------------------------------------
 # 4. Firewall (UFW)
 # -----------------------------------------------------------
-echo "[4/8] Configuring firewall..."
+echo "[4/9] Configuring firewall..."
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow 22/tcp    # SSH
@@ -72,7 +61,7 @@ ufw --force enable
 # -----------------------------------------------------------
 # 5. Fail2ban
 # -----------------------------------------------------------
-echo "[5/8] Configuring fail2ban..."
+echo "[5/9] Configuring fail2ban..."
 cat > /etc/fail2ban/jail.local << 'EOF'
 [DEFAULT]
 bantime = 3600
@@ -100,20 +89,19 @@ filter = nginx-limit-req
 logpath = /var/log/nginx/error.log
 maxretry = 10
 EOF
-
 systemctl enable fail2ban
 systemctl restart fail2ban
 
 # -----------------------------------------------------------
-# 6. Unattended security upgrades
+# 6. Auto security updates
 # -----------------------------------------------------------
-echo "[6/8] Enabling automatic security updates..."
+echo "[6/9] Enabling automatic security updates..."
 dpkg-reconfigure -plow unattended-upgrades 2>/dev/null || true
 
 # -----------------------------------------------------------
 # 7. SSH hardening
 # -----------------------------------------------------------
-echo "[7/8] Hardening SSH..."
+echo "[7/9] Hardening SSH..."
 if ! grep -q "PasswordAuthentication no" /etc/ssh/sshd_config; then
   sed -i 's/#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
   sed -i 's/#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
@@ -122,79 +110,61 @@ if ! grep -q "PasswordAuthentication no" /etc/ssh/sshd_config; then
 fi
 
 # -----------------------------------------------------------
-# 8. Clone project + initial deploy
+# 8. Set up shared reverse proxy
 # -----------------------------------------------------------
-echo "[8/8] Setting up project..."
-if [ ! -d "$DEPLOY_DIR" ]; then
-  # NOTE: Replace with your actual repo URL
-  echo ""
-  echo "  >>> Please clone your repository to $DEPLOY_DIR manually:"
-  echo "  sudo -u $APP_USER git clone <YOUR_REPO_URL> $DEPLOY_DIR"
-  echo ""
+echo "[8/9] Setting up shared reverse proxy..."
+mkdir -p "$SHARED_DIR/nginx/conf.d"
+mkdir -p /var/www/certbot
+
+# Copy shared configs if they exist in the repo
+if [ -f scripts/deploy/shared/nginx.conf ]; then
+  cp scripts/deploy/shared/nginx.conf "$SHARED_DIR/nginx/nginx.conf"
+fi
+if [ -f scripts/deploy/shared/docker-compose.yml ]; then
+  cp scripts/deploy/shared/docker-compose.yml "$SHARED_DIR/docker-compose.yml"
 fi
 
-# -----------------------------------------------------------
-# 9. Set up SSL certificates (first time)
-# -----------------------------------------------------------
-if [ -d "$DEPLOY_DIR" ]; then
-  cd "$DEPLOY_DIR"
+# Create empty upstreams
+touch "$SHARED_DIR/nginx/conf.d/upstreams.conf"
 
-  # Start nginx only (for ACME challenge)
-  docker compose up -d nginx
-
-  echo ""
-  echo "  >>> Waiting 10 seconds for nginx to start..."
-  sleep 10
-
-  # Get initial certificate
-  docker compose run --rm certbot certonly \
-    --webroot \
-    --webroot-path=/var/www/certbot \
-    -d "$DOMAIN" \
-    -d "www.$DOMAIN" \
-    --email "admin@$DOMAIN" \
-    --agree-tos \
-    --no-eff-email \
-    --force-renewal || echo ">>> SSL setup needs DNS to resolve to this server first!"
-
-  # Restart nginx with SSL
-  docker compose restart nginx
-fi
+# Start shared nginx
+cd "$SHARED_DIR"
+docker compose up -d nginx
 
 # -----------------------------------------------------------
-# 10. Set up backup cron
+# 9. Backup cron
 # -----------------------------------------------------------
-echo "Setting up backup cron..."
-if [ -f "$DEPLOY_DIR/scripts/deploy/backup-db.sh" ]; then
-  chmod +x "$DEPLOY_DIR/scripts/deploy/backup-db.sh"
-  # Run daily at 3 AM
-  CRON_LINE="0 3 * * * $DEPLOY_DIR/scripts/deploy/backup-db.sh >> /var/log/backup.log 2>&1"
-  (crontab -l 2>/dev/null | grep -v "backup-db.sh"; echo "$CRON_LINE") | crontab -
+echo "[9/9] Setting up backup cron..."
+if [ -f scripts/deploy/backup-db.sh ]; then
+  chmod +x scripts/deploy/backup-db.sh
+  # Backup all projects' databases daily at 3 AM
+  CRON_LINE="0 3 * * * /opt/shared/scripts/backup-all.sh >> /var/log/backup.log 2>&1"
+  (crontab -l 2>/dev/null | grep -v "backup-all.sh"; echo "$CRON_LINE") | crontab -
 fi
 
 echo ""
 echo "========================================="
-echo "  Setup Complete!"
+echo "  VPS Setup Complete!"
 echo "========================================="
 echo ""
-echo "Next steps:"
-echo "  1. Make sure DNS for $DOMAIN points to this server's IP"
-echo "  2. Create $DEPLOY_DIR/.env with your secrets"
-echo "  3. Push to main branch to trigger CI/CD deployment"
-echo "  4. Or run manually:"
-echo "     cd $DEPLOY_DIR"
-echo "     docker compose build"
-echo "     docker compose up -d"
-echo "     docker compose exec app bunx prisma migrate deploy"
+echo "Architecture:"
+echo "  /opt/shared/        → Shared nginx reverse proxy"
+echo "  /opt/<project>/     → Each project (app + postgres)"
+echo "  *.ferdowsi.cloud    → Subdomain routing"
 echo ""
-echo "Security checklist:"
-echo "  ✓ Firewall: only SSH(22), HTTP(80), HTTPS(443)"
-echo "  ✓ Fail2ban: SSH + nginx protection"
-echo "  ✓ SSH: password auth disabled, root login restricted"
-echo "  ✓ Auto-updates: security patches enabled"
-echo "  ✓ Non-root deploy user"
-echo "  ✓ PostgreSQL: bound to localhost only"
-echo "  ✓ Nginx rate limiting enabled"
-echo "  ✓ SSL via Let's Encrypt"
-echo "  ✓ Daily DB backups at 3 AM"
+echo "To deploy your first project:"
+echo "  1. cd /opt"
+echo "  2. git clone <your-repo> airbnb"
+echo "  3. cd airbnb"
+echo "  4. cp .env.production.example .env && nano .env"
+echo "  5. docker compose build && docker compose up -d"
+echo "  6. docker compose exec app bunx prisma migrate deploy"
+echo "  7. bash scripts/deploy/shared/add-project-nginx.sh airbnb"
+echo "  8. docker compose -f /opt/shared/docker-compose.yml run --rm certbot certonly \\"
+echo "       --webroot --webroot-path=/var/www/certbot \\"
+echo "       -d airbnb.ferdowsi.cloud --email admin@ferdowsi.cloud --agree-tos --no-eff-email"
+echo "  9. docker compose -f /opt/shared/docker-compose.yml exec nginx nginx -s reload"
+echo ""
+echo "To add more projects later:"
+echo "  bash scripts/deploy/shared/add-project-nginx.sh <project-name>"
 echo ""

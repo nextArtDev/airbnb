@@ -1,0 +1,67 @@
+# -----------------------------------------------------------
+# Per-project Docker Compose
+# Copy to /opt/<project-name>/docker-compose.yml and customize
+# -----------------------------------------------------------
+services:
+  # -----------------------------------------------------------
+  # PostgreSQL
+  # -----------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-airbnb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-airbnb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Port binding: use unique port per project if you need direct access
+    # Format: 127.0.0.1:543X:5432 where X is project index
+    # For most cases, just use the docker network - no port needed
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-airbnb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------
+  # Application
+  # -----------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-airbnb}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-airbnb}?schema=public
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://airbnb.ferdowsi.cloud}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://airbnb.ferdowsi.cloud}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      STORAGE_PATH: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3000').then(r=>{if(!r.ok)throw 1}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - default
+      - shared-proxy  # Connect to shared nginx
+
+networks:
+  shared-proxy:
+    external: true  # Created by /opt/shared/docker-compose.yml
+
+volumes:
+  postgres_data:
+  uploads_data:
