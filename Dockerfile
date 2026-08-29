@@ -21,8 +21,8 @@ COPY . .
 # Generate the Prisma client (output goes to app/generated/prisma)
 RUN bunx prisma generate
 
-# Build the Next.js application
-RUN bun run build
+# Build the Next.js application (use node directly to avoid Bun segfault)
+RUN npx next build
 
 # -----------------------------------------------------------
 # Stage 3 – production image
