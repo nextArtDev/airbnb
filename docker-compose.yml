@@ -29,6 +29,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      dns:
+        - 8.8.8.8
+        - 8.8.4.4
     restart: unless-stopped
     depends_on:
       db:
