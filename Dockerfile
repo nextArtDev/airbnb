@@ -22,7 +22,7 @@ COPY . .
 RUN bunx prisma generate
 
 # Build the Next.js application (use node directly to avoid Bun segfault)
-RUN npx next build
+RUN bunx next build
 
 # -----------------------------------------------------------
 # Stage 3 – production image
