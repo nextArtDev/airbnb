@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy only manifests first (better layer caching)
 COPY bun.lock package.json ./
-RUN bun install --frozen-lockfile
+RUN bun install --no-save
 
 # -----------------------------------------------------------
 # Stage 2 – generate Prisma client + build Next.js
