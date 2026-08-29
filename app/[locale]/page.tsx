@@ -102,7 +102,7 @@ export default async function HomePage(props: PageProps<'/[locale]'>) {
     <>
       <Navbar />
       <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-4 pt-8 pb-4">
+        <section className="mx-auto max-w-6xl px-4 pt-8 pb-4 ">
           <h1 className="mb-1 text-center text-2xl font-bold sm:text-3xl">
             {t('heroTitle')}
           </h1>
@@ -115,9 +115,9 @@ export default async function HomePage(props: PageProps<'/[locale]'>) {
           />
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 pt-4">
+        <section className="mx-auto max-w-6xl px-4 pt-4 ">
           <div
-            className="scrollbar-none flex gap-6 overflow-x-auto pb-2"
+            className="scrollbar-none flex gap-6 overflow-x-auto pb-2   justify-center"
             dir="ltr"
           >
             {[...CATEGORIES].reverse().map(({ value, icon: Icon }) => (

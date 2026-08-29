@@ -39,31 +39,78 @@ export function ListingCard({
   const [currentImage, setCurrentImage] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Helper to determine if we are in an RTL context
+  const getIsRtl = (el: HTMLElement) => {
+    return (
+      document.documentElement.getAttribute('dir') === 'rtl' ||
+      document.body?.getAttribute('dir') === 'rtl' ||
+      el.closest('[dir="rtl"]') !== null
+    )
+  }
+
+  // Normalize scrollLeft to always represent distance from the start (0 to maxScroll)
+  // regardless of browser implementation (Modern vs Old WebKit RTL)
+  const getNormalizedScrollPos = (el: HTMLElement) => {
+    const isRtl = getIsRtl(el)
+    let scrollPos = el.scrollLeft
+
+    if (isRtl) {
+      if (scrollPos <= 0) {
+        // Modern browsers (Chrome, Firefox, Safari): scrollLeft is negative in RTL
+        scrollPos = -scrollPos
+      } else {
+        // Older WebKit browsers: scrollLeft decreases from maxScroll to 0 in RTL
+        scrollPos = el.scrollWidth - el.clientWidth - scrollPos
+      }
+    }
+
+    return scrollPos
+  }
+
   const updateIndex = useCallback(() => {
     const el = containerRef.current
     if (!el || images.length <= 1) return
-    const scrollLeft = el.scrollLeft
+
+    const scrollPos = getNormalizedScrollPos(el)
     const width = el.clientWidth
-    const idx = Math.round(scrollLeft / width)
-    setCurrentImage(Math.min(idx, images.length - 1))
+    if (width === 0) return
+
+    const idx = Math.round(scrollPos / width)
+    setCurrentImage(Math.min(Math.max(0, idx), images.length - 1))
   }, [images.length])
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     el.addEventListener('scroll', updateIndex, { passive: true })
+    updateIndex() // Set initial index on mount
     return () => el.removeEventListener('scroll', updateIndex)
   }, [updateIndex])
 
   function scrollImage(dir: 'prev' | 'next') {
     const el = containerRef.current
     if (!el) return
+
     const width = el.clientWidth
-    const next =
+    if (width === 0) return
+
+    const isRtl = getIsRtl(el)
+    const currentScrollPos = getNormalizedScrollPos(el)
+    const currentIdx = Math.round(currentScrollPos / width)
+
+    const nextIdx =
       dir === 'next'
-        ? Math.min(currentImage + 1, images.length - 1)
-        : Math.max(currentImage - 1, 0)
-    el.scrollTo({ left: next * width, behavior: 'smooth' })
+        ? Math.min(currentIdx + 1, images.length - 1)
+        : Math.max(currentIdx - 1, 0)
+
+    const deltaPos = (nextIdx - currentIdx) * width
+
+    // In RTL, "next" is physically to the left, requiring a negative delta in scrollBy
+    // In LTR, "next" is physically to the right, requiring a positive delta
+    const scrollDelta = isRtl ? -deltaPos : deltaPos
+
+    el.scrollBy({ left: scrollDelta, behavior: 'smooth' })
+    setCurrentImage(nextIdx)
   }
 
   return (
@@ -116,7 +163,8 @@ export function ListingCard({
                   className="absolute start-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/90 shadow-sm opacity-0 transition hover:bg-white hover:shadow-md group-hover:opacity-100 sm:opacity-0"
                   aria-label="Previous image"
                 >
-                  <ChevronLeft className="size-3.5" />
+                  {/* rtl:rotate-180 ensures the arrow points correctly to the right in RTL */}
+                  <ChevronLeft className="size-3.5 rtl:rotate-180" />
                 </button>
               )}
               {currentImage < images.length - 1 && (
@@ -131,7 +179,8 @@ export function ListingCard({
                   className="absolute end-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/90 shadow-sm opacity-0 transition hover:bg-white hover:shadow-md group-hover:opacity-100 sm:opacity-0"
                   aria-label="Next image"
                 >
-                  <ChevronRight className="size-3.5" />
+                  {/* rtl:rotate-180 ensures the arrow points correctly to the left in RTL */}
+                  <ChevronRight className="size-3.5 rtl:rotate-180" />
                 </button>
               )}
             </>
