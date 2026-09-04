@@ -8,7 +8,13 @@ import {
   ListingCard,
   ListingCardSkeleton,
 } from '@/components/listing/listing-card'
-import { CATEGORIES } from '@/constants/categories'
+import {
+  CATEGORIES,
+  LISTING_TYPE_TABS,
+  isListingTypeValue,
+  type ListingTypeTab,
+} from '@/constants/categories'
+import { ListingType } from '@/app/generated/prisma/client'
 import { Link } from '@/i18n/navigation'
 import { getCurrentUser } from '@/lib/auth-helpers'
 import {
@@ -21,6 +27,7 @@ import { Button } from '@/components/ui/button'
 interface HomeFilters {
   city?: string
   category?: string
+  listingType?: ListingType
   guests?: number
   checkIn?: Date
   checkOut?: Date
@@ -28,7 +35,7 @@ interface HomeFilters {
 
 function parseFilters(
   sp: Record<string, string | string[] | undefined>,
-): HomeFilters {
+): { filters: HomeFilters; tab: ListingTypeTab } {
   const one = (k: string) => {
     const v = sp[k]
     return Array.isArray(v) ? v[0] : v
@@ -36,13 +43,40 @@ function parseFilters(
   const checkInRaw = one('checkIn')
   const checkOutRaw = one('checkOut')
   const guestsRaw = one('guests')
+  const typeRaw = one('type')
+
+  const checkIn = checkInRaw ? new Date(checkInRaw) : undefined
+  const checkOut = checkOutRaw ? new Date(checkOutRaw) : undefined
+
+  let tab: ListingTypeTab = 'all'
+  if (typeRaw && isListingTypeValue(typeRaw)) tab = typeRaw
+
+  // Monthly rentals and sales are inquiry-based; check-in/check-out only make
+  // sense for nightly stays. When dates are present without an explicit type,
+  // the visitor is looking for a bookable stay.
+  let listingType: ListingType | undefined
+  let appliesDates = false
+  if (tab === 'monthly' || tab === 'sale') {
+    listingType = tab
+  } else if (tab === 'nightly') {
+    listingType = ListingType.nightly
+    appliesDates = true
+  } else if (checkIn && checkOut) {
+    // 'all' with dates -> the visitor is looking for a bookable stay.
+    listingType = ListingType.nightly
+    appliesDates = true
+  }
 
   return {
-    city: one('city') || undefined,
-    category: one('category') || undefined,
-    guests: guestsRaw ? Number(guestsRaw) : undefined,
-    checkIn: checkInRaw ? new Date(checkInRaw) : undefined,
-    checkOut: checkOutRaw ? new Date(checkOutRaw) : undefined,
+    filters: {
+      city: one('city') || undefined,
+      category: one('category') || undefined,
+      listingType,
+      guests: guestsRaw ? Number(guestsRaw) : undefined,
+      checkIn: appliesDates ? checkIn : undefined,
+      checkOut: appliesDates ? checkOut : undefined,
+    },
+    tab,
   }
 }
 
@@ -87,12 +121,27 @@ export default async function HomePage(props: PageProps<'/[locale]'>) {
   const [{ locale }, sp] = await Promise.all([props.params, props.searchParams])
   setRequestLocale(locale)
   const t = await getTranslations('home')
-  const filters = parseFilters(sp)
+  const { filters, tab } = parseFilters(sp)
+
+  function typeHref(value: ListingTypeTab): string {
+    const params = new URLSearchParams()
+    if (filters.city) params.set('city', filters.city)
+    if (filters.guests) params.set('guests', String(filters.guests))
+    // Dates only survive on tabs where they are meaningful.
+    if (filters.checkIn && filters.checkOut && value !== 'monthly' && value !== 'sale') {
+      params.set('checkIn', filters.checkIn.toISOString())
+      params.set('checkOut', filters.checkOut.toISOString())
+    }
+    if (value !== 'all') params.set('type', value)
+    const qs = params.toString()
+    return qs ? `/?${qs}` : '/'
+  }
 
   function categoryHref(value: string): string {
     const params = new URLSearchParams()
     if (filters.city) params.set('city', filters.city)
     if (filters.guests) params.set('guests', String(filters.guests))
+    if (tab !== 'all') params.set('type', tab)
     if (filters.category !== value) params.set('category', value)
     const qs = params.toString()
     return qs ? `/?${qs}` : '/'
@@ -112,12 +161,36 @@ export default async function HomePage(props: PageProps<'/[locale]'>) {
           <SearchBar
             initialCity={filters.city}
             initialGuests={filters.guests}
+            activeTab={tab}
           />
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pt-4 ">
+          {/* Ad-type tabs (All / Homes / Monthly rent / For sale) */}
           <div
-            className="scrollbar-none flex gap-6 overflow-x-auto pb-2   justify-center"
+            className="scrollbar-none flex gap-6 overflow-x-auto pb-2 justify-center border-b border-border/60"
+            dir="ltr"
+          >
+            {LISTING_TYPE_TABS.map(({ value, icon: Icon }) => (
+              <Link
+                key={value}
+                href={typeHref(value)}
+                className={`flex shrink-0 flex-col items-center gap-1 border-b-2 pb-2 pt-1 text-xs text-muted-foreground transition hover:text-foreground ${
+                  tab === value
+                    ? '-mb-[9px] border-foreground font-medium text-foreground'
+                    : 'border-transparent'
+                }`}
+                dir="auto"
+              >
+                <Icon className="size-5" />
+                {t(`tabs.${value}`)}
+              </Link>
+            ))}
+          </div>
+
+          {/* Property categories (orthogonal to the ad type) */}
+          <div
+            className="scrollbar-none mt-3 flex gap-6 overflow-x-auto pb-2   justify-center"
             dir="ltr"
           >
             {[...CATEGORIES].reverse().map(({ value, icon: Icon }) => (
@@ -142,7 +215,9 @@ export default async function HomePage(props: PageProps<'/[locale]'>) {
           <h2 className="mb-5 text-lg font-semibold">
             {filters.city
               ? t('resultsFor', { query: filters.city })
-              : t('allListings')}
+              : tab === 'all'
+                ? t('allListings')
+                : t(`tabs.${tab}`)}
           </h2>
           <Suspense
             fallback={

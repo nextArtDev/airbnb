@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
 import Image from 'next/image'
-import { Trash2, Upload } from 'lucide-react'
+import { CalendarClock, House, Tag, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { CATEGORIES, AMENITIES } from '@/constants/categories'
@@ -17,6 +17,7 @@ import {
 import {
   listingFormSchema,
   type ListingFormValues,
+  type ListingTypeValue,
 } from '@/lib/schemas/listing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,7 +41,7 @@ const STEPS = [
 ] as const
 
 const STEP_FIELDS: Record<(typeof STEPS)[number], string[]> = {
-  category: ['category'],
+  category: ['category', 'type'],
   location: ['city', 'province', 'address'],
   details: [
     'title',
@@ -52,8 +53,25 @@ const STEP_FIELDS: Record<(typeof STEPS)[number], string[]> = {
   ],
   amenitiesStep: ['amenities'],
   images: ['coverImage', 'images'],
-  pricing: ['pricePerNight'],
+  // All price fields: superRefine decides which ones matter per ad type.
+  pricing: [
+    'pricePerNight',
+    'monthlyRent',
+    'mortgageAmount',
+    'salePrice',
+  ],
 }
+
+const TYPE_OPTIONS: {
+  value: ListingTypeValue
+  icon: typeof House
+  labelKey: string
+  hintKey: string
+}[] = [
+  { value: 'nightly', icon: House, labelKey: 'typeNightly', hintKey: 'typeNightlyHint' },
+  { value: 'monthly', icon: CalendarClock, labelKey: 'typeMonthly', hintKey: 'typeMonthlyHint' },
+  { value: 'sale', icon: Tag, labelKey: 'typeSale', hintKey: 'typeSaleHint' },
+]
 
 export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
   const t = useTranslations('hosting')
@@ -78,12 +96,16 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
       title: '',
       description: '',
       category: undefined,
+      type: 'nightly',
       amenities: [],
       guestCount: 2,
       bedroomCount: 1,
       bedCount: 1,
       bathroomCount: 1,
       pricePerNight: undefined,
+      monthlyRent: undefined,
+      mortgageAmount: undefined,
+      salePrice: undefined,
       country: 'IR',
       province: '',
       city: '',
@@ -99,6 +121,7 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
     control: form.control,
     name: 'category',
   })
+  const selectedType = useWatch({ control: form.control, name: 'type' }) ?? 'nightly'
 
   const [pending, startTransition] = useTransition()
   const step = STEPS[stepIndex]
@@ -153,8 +176,18 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
       setStepIndex(4)
       return
     }
+    const num = (v: number | null | undefined) =>
+      v === null || v === undefined ? undefined : Number(v)
     const payload = {
       ...values,
+      type: selectedType,
+      // Only the price fields of the chosen ad type are sent; the rest are
+      // nulled so the listing_price_shape DB constraint always holds.
+      pricePerNight: selectedType === 'nightly' ? num(values.pricePerNight) : null,
+      monthlyRent: selectedType === 'monthly' ? num(values.monthlyRent) ?? 0 : null,
+      mortgageAmount:
+        selectedType === 'monthly' ? num(values.mortgageAmount) ?? 0 : null,
+      salePrice: selectedType === 'sale' ? num(values.salePrice) : null,
       latitude:
         values.latitude === null || values.latitude === undefined
           ? null
@@ -207,6 +240,27 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
     return typeof e?.message === 'string' ? e.message : undefined
   }
 
+  const numRegister = (name: keyof ListingFormValues) =>
+    form.register(name as never, {
+      setValueAs: (v: string) =>
+        v === '' || v === null || Number.isNaN(Number(v))
+          ? undefined
+          : Number(v),
+    })
+
+  const priceApprox = (name: keyof ListingFormValues) => {
+    const v = form.watch(name as never)
+    if (v == null) return null
+    return (
+      <p className="text-sm text-muted-foreground" dir="auto">
+        ≈{' '}
+        {new Intl.NumberFormat(
+          locale === 'fa' ? 'fa-IR' : locale === 'ar' ? 'ar' : 'en-US',
+        ).format(Number(v))}
+      </p>
+    )
+  }
+
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-3xl space-y-8">
       {/* Stepper */}
@@ -232,31 +286,66 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
       </ol>
 
       {step === 'category' && (
-        <section>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {CATEGORIES.map(({ value, icon: Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() =>
-                  form.setValue('category', value, { shouldValidate: true })
-                }
-                className={cn(
-                  'flex flex-col items-center gap-2 rounded-xl border p-4 text-sm transition hover:border-foreground/50',
-                  selectedCategory === value &&
-                    'border-foreground bg-accent font-semibold',
-                )}
-              >
-                <Icon className="size-6" />
-                {th(`categories.${value}`)}
-              </button>
-            ))}
+        <section className="space-y-6">
+          {/* Ad type: nightly stay / monthly rent / sale */}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
+              {t('form.typeLabel')}
+            </h3>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {TYPE_OPTIONS.map(({ value, icon: Icon, labelKey, hintKey }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    form.setValue('type', value, { shouldValidate: true })
+                  }
+                  className={cn(
+                    'flex flex-col items-start gap-2 rounded-xl border p-4 text-start text-sm transition hover:border-foreground/50',
+                    selectedType === value &&
+                      'border-foreground bg-accent font-semibold',
+                  )}
+                >
+                  <Icon className="size-5" />
+                  <span>{t(`form.${labelKey}`)}</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {t(`form.${hintKey}`)}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-          {err('category') && (
-            <p role="alert" className="mt-2 text-sm text-destructive">
-              {err('category')}
-            </p>
-          )}
+
+          {/* Property category */}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
+              {t('form.categoryLabel')}
+            </h3>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {CATEGORIES.map(({ value, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    form.setValue('category', value, { shouldValidate: true })
+                  }
+                  className={cn(
+                    'flex flex-col items-center gap-2 rounded-xl border p-4 text-sm transition hover:border-foreground/50',
+                    selectedCategory === value &&
+                      'border-foreground bg-accent font-semibold',
+                  )}
+                >
+                  <Icon className="size-6" />
+                  {th(`categories.${value}`)}
+                </button>
+              ))}
+            </div>
+            {err('category') && (
+              <p role="alert" className="mt-2 text-sm text-destructive">
+                {err('category')}
+              </p>
+            )}
+          </div>
         </section>
       )}
 
@@ -467,35 +556,113 @@ export function ListingForm({ listingId, defaultValues }: ListingFormProps) {
 
       {step === 'pricing' && (
         <section className="max-w-sm space-y-2">
-          <Label htmlFor="pricePerNight">{t('form.priceLabel')} *</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="pricePerNight"
-              type="number"
-              min={50000}
-              step={10000}
-              dir="ltr"
-              {...form.register('pricePerNight', {
-                setValueAs: (v) => (v === '' ? undefined : Number(v)),
-              })}
-              className="text-center"
-            />
-            <span className="whitespace-nowrap text-sm text-muted-foreground">
-              {tc('toman')} / {tc('night')}
-            </span>
-          </div>
-          {err('pricePerNight') && (
-            <p role="alert" className="text-sm text-destructive">
-              {err('pricePerNight')}
-            </p>
+          {selectedType === 'nightly' && (
+            <>
+              <Label htmlFor="pricePerNight">{t('form.priceLabel')} *</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="pricePerNight"
+                  type="number"
+                  min={50000}
+                  step={10000}
+                  dir="ltr"
+                  {...numRegister('pricePerNight')}
+                  className="text-center"
+                />
+                <span className="whitespace-nowrap text-sm text-muted-foreground">
+                  {tc('toman')} / {tc('night')}
+                </span>
+              </div>
+              {err('pricePerNight') && (
+                <p role="alert" className="text-sm text-destructive">
+                  {err('pricePerNight')}
+                </p>
+              )}
+              {priceApprox('pricePerNight')}
+            </>
           )}
-          {form.watch('pricePerNight') != null && (
-            <p className="text-sm text-muted-foreground" dir="auto">
-              ≈{' '}
-              {new Intl.NumberFormat(
-                locale === 'fa' ? 'fa-IR' : locale === 'ar' ? 'ar' : 'en-US',
-              ).format(Number(form.watch('pricePerNight')))}
-            </p>
+
+          {selectedType === 'monthly' && (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="mortgageAmount">
+                  {t('form.mortgageLabel')} *
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="mortgageAmount"
+                    type="number"
+                    min={0}
+                    step={1000000}
+                    dir="ltr"
+                    {...numRegister('mortgageAmount')}
+                    className="text-center"
+                  />
+                  <span className="whitespace-nowrap text-sm text-muted-foreground">
+                    {tc('toman')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('form.mortgageHint')}
+                </p>
+                {err('mortgageAmount') && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {err('mortgageAmount')}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="monthlyRent">{t('form.monthlyRentLabel')}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="monthlyRent"
+                    type="number"
+                    min={0}
+                    step={1000000}
+                    dir="ltr"
+                    {...numRegister('monthlyRent')}
+                    className="text-center"
+                  />
+                  <span className="whitespace-nowrap text-sm text-muted-foreground">
+                    {tc('toman')} / {t('form.perMonth')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('form.monthlyRentHint')}
+                </p>
+                {err('monthlyRent') && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {err('monthlyRent')}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {selectedType === 'sale' && (
+            <>
+              <Label htmlFor="salePrice">{t('form.salePriceLabel')} *</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="salePrice"
+                  type="number"
+                  min={1000000}
+                  step={1000000}
+                  dir="ltr"
+                  {...numRegister('salePrice')}
+                  className="text-center"
+                />
+                <span className="whitespace-nowrap text-sm text-muted-foreground">
+                  {tc('toman')}
+                </span>
+              </div>
+              {err('salePrice') && (
+                <p role="alert" className="text-sm text-destructive">
+                  {err('salePrice')}
+                </p>
+              )}
+              {priceApprox('salePrice')}
+            </>
           )}
         </section>
       )}

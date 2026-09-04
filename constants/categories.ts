@@ -7,9 +7,12 @@ import {
   Flame,
   Gem,
   Home,
+  KeyRound,
   Landmark,
+  Layers,
   Mountain,
   Sun,
+  Tag,
   TentTree,
   Tv,
   UtensilsCrossed,
@@ -42,6 +45,24 @@ export const CATEGORIES: CategoryDef[] = [
   { value: "mountain", icon: Mountain },
   { value: "luxury", icon: Gem },
 ];
+
+// Top-level ad types shown as the primary tabs (like airbnb's
+// All/Homes/Services/Experiences). "all" is a pseudo-type = no filter.
+export type ListingTypeTab = "all" | "nightly" | "monthly" | "sale";
+
+export const LISTING_TYPE_TABS: { value: ListingTypeTab; icon: LucideIcon }[] = [
+  { value: "all", icon: Layers },
+  { value: "nightly", icon: Home },
+  { value: "monthly", icon: KeyRound },
+  { value: "sale", icon: Tag },
+];
+
+export const LISTING_TYPE_VALUES = ["nightly", "monthly", "sale"] as const;
+export type ListingTypeValue = (typeof LISTING_TYPE_VALUES)[number];
+
+export function isListingTypeValue(v: string): v is ListingTypeValue {
+  return (LISTING_TYPE_VALUES as readonly string[]).includes(v);
+}
 
 export const AMENITY_KEYS = [
   "wifi",

@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "title": "Arat Real State | Vacation Rentals",
+    "title": "Arat Real State | Stays, Rentals & Homes for Sale",
     "template": "%s | Arat Real State",
-    "description": "Book villas, eco-lodges and unique stays across Iran and around the world"
+    "description": "Book villas and eco-lodges per night, find monthly rentals with deposit, or browse homes for sale across Iran and around the world"
   },
   "nav": {
     "brand": "Arat Real State",
@@ -38,7 +38,8 @@
       "notFound": "Not found.",
       "serverError": "Something went wrong. Please try again.",
       "invalid": "Invalid input.",
-      "invalidImage": "Invalid image."
+      "invalidImage": "Invalid image.",
+      "hasReservations": "This listing has active reservations, so its type cannot be changed."
     },
         "increase": "Increase",
     "clear": "Clear",
@@ -81,8 +82,8 @@
     "signUpBtn": "Sign up"
   },
   "home": {
-    "heroTitle": "Find your next stay",
-    "heroSubtitle": "Villas, eco-lodges and unique places at great prices",
+    "heroTitle": "Find your next place",
+    "heroSubtitle": "Stays by the night, monthly rentals with deposit, and homes for sale",
     "where": "Where",
     "wherePlaceholder": "Search destinations",
     "when": "When",
@@ -94,10 +95,16 @@
     "addDates": "Add dates",
     "popularCities": "Popular destinations",
     "exploreCategories": "Explore by category",
-    "allListings": "All stays",
+    "allListings": "All listings",
     "resultsFor": "Results for “{query}”",
-    "emptyResults": "No stays matched your search.",
+    "emptyResults": "No listings matched your search.",
     "clearFilters": "Clear filters",
+    "tabs": {
+      "all": "All",
+      "nightly": "Stays",
+      "monthly": "Monthly rent",
+      "sale": "For sale"
+    },
     "categories": {
       "beach": "Beachfront",
       "villa": "Villas",
@@ -111,6 +118,25 @@
   },
   "listing": {
     "perNight": "per night",
+    "perMonth": "per month",
+    "mortgage": "mortgage",
+    "fullMortgage": "Full deposit:",
+    "salePrice": "total price",
+    "monthlyRent": "Monthly rent",
+    "monthlyTermsTitle": "Rental terms",
+    "saleTitle": "Sale details",
+    "mortgageNote": "The mortgage deposit is paid to the owner at the start of the contract and fully refunded to the renter when the contract ends.",
+    "monthlyInquiryHint": "Monthly rentals are arranged by messaging the owner directly.",
+    "saleInquiryHint": "Sales are arranged by messaging the owner directly.",
+    "requestRental": "Request this rental",
+    "requestViewing": "Request a viewing",
+    "selfInquiry": "This is your listing",
+    "noMortgage": "None",
+    "noMonthlyRent": "None (full deposit)",
+    "typeBadge": {
+      "monthly": "Monthly rent",
+      "sale": "For sale"
+    },
     "guests": "guests",
     "bedrooms": "bedrooms",
     "beds": "beds",
@@ -164,6 +190,7 @@
     "dateError": "Check-out must be after check-in.",
     "pastDateError": "Check-in date cannot be in the past.",
       "guestCountError": "Guest count exceeds this listing's capacity.",
+      "notBookable": "This listing cannot be booked online. Message the host to arrange it.",
       "selectDates": "Select dates",
       "reserve": "Reserve",
       "dates": "Dates"
@@ -206,6 +233,14 @@
       "pricing": "Pricing"
     },
     "form": {
+      "typeLabel": "What are you listing?",
+      "typeNightly": "Stay per night",
+      "typeNightlyHint": "Guests book it online by the night",
+      "typeMonthly": "Monthly rent",
+      "typeMonthlyHint": "Monthly rent with refundable deposit (rah'n)",
+      "typeSale": "For sale",
+      "typeSaleHint": "Sell the property directly to buyers",
+      "categoryLabel": "Property category",
       "titleLabel": "Listing title",
       "titlePlaceholder": "e.g. Cozy seaside villa",
       "descriptionLabel": "Description",
@@ -218,6 +253,12 @@
       "bedsLabel": "Beds",
       "bathsLabel": "Bathrooms",
       "priceLabel": "Price per night (Toman)",
+      "monthlyRentLabel": "Monthly rent (Toman)",
+      "monthlyRentHint": "Leave empty or 0 for a full-deposit (rah'n-e kamel) listing.",
+      "mortgageLabel": "Mortgage / deposit (Toman)",
+      "mortgageHint": "Refundable deposit the renter pays you at contract start; you return it when the contract ends. Leave empty or 0 for no deposit.",
+      "salePriceLabel": "Sale price (Toman)",
+      "perMonth": "month",
       "coverLabel": "Cover",
       "imagesHint": "Up to 10 photos; the first one becomes the cover.",
       "latitudeLabel": "Latitude",
@@ -255,12 +296,14 @@
   },
   "chatbot": {
     "title": "Arat Real State Assistant",
-    "subtitle": "Answers about booking, payments and hosting",
+    "subtitle": "Answers about stays, rentals, sales, payments and hosting",
     "placeholder": "Type your question...",
     "send": "Send",
     "close": "Close",
     "suggestions": {
       "howToBook": "How do I book a stay?",
+      "monthlyRent": "How does monthly rent with deposit work?",
+      "buyHome": "How do I browse homes for sale?",
       "payments": "What payment methods are supported?",
       "cancel": "How do cancellations work?",
       "becomeHost": "How do I become a host?"

@@ -7,7 +7,6 @@ import {
   setRequestLocale,
 } from 'next-intl/server'
 import localFont from 'next/font/local'
-import { Inter } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { ChatBot } from '@/components/chat/chat-bot'
 import { isRtl, routing } from '@/i18n/routing'
@@ -19,9 +18,11 @@ const vazirmatn = localFont({
   variable: '--font-sans',
 })
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: '../fonts/Inter-Variable-latin.woff2',
+  weight: '100 900',
   variable: '--font-sans',
+  display: 'swap',
 })
 
 export function generateStaticParams() {

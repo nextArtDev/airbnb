@@ -17,7 +17,11 @@ interface ListingCardProps {
     images?: string[]
     city: string
     province: string | null
-    pricePerNight: number
+    type?: 'nightly' | 'monthly' | 'sale'
+    pricePerNight?: number | null
+    monthlyRent?: number | bigint | null
+    mortgageAmount?: number | bigint | null
+    salePrice?: number | bigint | null
   }
   rating?: number | null
   favorited?: boolean
@@ -113,6 +117,59 @@ export function ListingCard({
     setCurrentImage(nextIdx)
   }
 
+  // Price line adapts to the ad type: nightly stays show a per-night price,
+  // monthly rentals show deposit + rent, sales show the total price. BigInt
+  // prices (long-term columns) are normalized to Number for display math.
+  function renderPrice() {
+    if (listing.type === 'monthly') {
+      const rent = Number(listing.monthlyRent ?? 0)
+      const deposit = Number(listing.mortgageAmount ?? 0)
+      if (rent > 0 && deposit > 0) {
+        return (
+          <p className="pt-1 text-sm">
+            <span className="font-semibold">{formatMoney(deposit, locale)}</span>{' '}
+            <span className="text-muted-foreground">{t('mortgage')}</span>
+            <span className="text-muted-foreground"> · </span>
+            <span className="font-semibold">{formatMoney(rent, locale)}</span>{' '}
+            <span className="text-muted-foreground">{t('perMonth')}</span>
+          </p>
+        )
+      }
+      if (rent === 0) {
+        return (
+          <p className="pt-1 text-sm">
+            <span className="text-muted-foreground">{t('fullMortgage')}</span>{' '}
+            <span className="font-semibold">{formatMoney(deposit, locale)}</span>
+          </p>
+        )
+      }
+      return (
+        <p className="pt-1 text-sm">
+          <span className="font-semibold">{formatMoney(rent, locale)}</span>{' '}
+          <span className="text-muted-foreground">{t('perMonth')}</span>
+        </p>
+      )
+    }
+    if (listing.type === 'sale') {
+      return (
+        <p className="pt-1 text-sm">
+          <span className="font-semibold">
+            {formatMoney(Number(listing.salePrice ?? 0), locale)}
+          </span>{' '}
+          <span className="text-muted-foreground">{t('salePrice')}</span>
+        </p>
+      )
+    }
+    return (
+      <p className="pt-1 text-sm">
+        <span className="font-semibold">
+          {formatMoney(listing.pricePerNight ?? 0, locale)}
+        </span>{' '}
+        <span className="text-muted-foreground">{t('perNight')}</span>
+      </p>
+    )
+  }
+
   return (
     <div className="group relative w-full">
       <Link
@@ -199,6 +256,18 @@ export function ListingCard({
               ))}
             </div>
           )}
+
+          {/* Ad-type badge for monthly / sale */}
+          {listing.type === 'monthly' && (
+            <span className="absolute start-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-foreground shadow-sm">
+              {t('typeBadge.monthly')}
+            </span>
+          )}
+          {listing.type === 'sale' && (
+            <span className="absolute start-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-foreground shadow-sm">
+              {t('typeBadge.sale')}
+            </span>
+          )}
         </div>
 
         {/* Card info */}
@@ -218,12 +287,7 @@ export function ListingCard({
           <p className="line-clamp-1 text-sm text-muted-foreground">
             {listing.title}
           </p>
-          <p className="pt-1 text-sm">
-            <span className="font-semibold">
-              {formatMoney(listing.pricePerNight, locale)}
-            </span>{' '}
-            <span className="text-muted-foreground">{t('perNight')}</span>
-          </p>
+          {renderPrice()}
         </div>
       </Link>
       <HeartButton

@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Local image uploads
 uploads/
+
+# prisma engines (local binary cache, never commit)
+.prisma-engines/

@@ -64,12 +64,18 @@ export async function createReservation(
         id: true,
         userId: true,
         guestCount: true,
+        type: true,
         pricePerNight: true,
         published: true,
       },
     });
     if (!listing || !listing.published) {
       return { success: false, message: "notFound" };
+    }
+    // Online date-based booking only exists for nightly stays. Monthly
+    // rentals (رهن و اجاره) and sales are arranged by messaging the host.
+    if (listing.type !== "nightly" || listing.pricePerNight == null) {
+      return { success: false, message: "notBookable" };
     }
     if (listing.userId === user.id) {
       return { success: false, message: "selfBookingError" };

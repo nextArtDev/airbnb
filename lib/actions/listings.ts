@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { PaymentStatus } from "@/app/generated/prisma/client";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { deleteFile, uploadFile } from "@/lib/actions/upload";
-import { listingFormSchema } from "@/lib/schemas/listing";
+import { listingFormSchema, type ListingTypeValue } from "@/lib/schemas/listing";
 
 export interface MutationResult {
   success: boolean;
@@ -13,6 +14,26 @@ export interface MutationResult {
 }
 
 const MAX_IMAGES = 10;
+
+/**
+ * Nulls out pricing fields that don't belong to the chosen ad type so the
+ * listing_price_shape DB CHECK constraint always holds. Long-term amounts are
+ * BigInt columns, so the (JSON-transported) numbers are converted here.
+ */
+function priceFields(type: ListingTypeValue, data: {
+  pricePerNight?: number | null;
+  monthlyRent?: number | null;
+  mortgageAmount?: number | null;
+  salePrice?: number | null;
+}) {
+  const big = (v: number | null | undefined) => BigInt(Math.trunc(v ?? 0));
+  return {
+    pricePerNight: type === "nightly" ? data.pricePerNight : null,
+    monthlyRent: type === "monthly" ? big(data.monthlyRent) : null,
+    mortgageAmount: type === "monthly" ? big(data.mortgageAmount) : null,
+    salePrice: type === "sale" ? big(data.salePrice) : null,
+  };
+}
 
 /** Uploads image files to local disk; returns served URLs. */
 export async function uploadListingImages(
@@ -63,12 +84,13 @@ export async function createListing(input: unknown): Promise<MutationResult> {
         title: data.title,
         description: data.description,
         category: data.category,
+        type: data.type,
+        ...priceFields(data.type, data),
         amenities: data.amenities,
         guestCount: data.guestCount,
         bedroomCount: data.bedroomCount,
         bedCount: data.bedCount,
         bathroomCount: data.bathroomCount,
-        pricePerNight: data.pricePerNight,
         country: data.country,
         province: data.province || null,
         city: data.city,
@@ -107,6 +129,27 @@ export async function updateListing(
   const data = parsed.data;
 
   try {
+    // A listing that already holds bookings can't switch ad type - its
+    // reservation history is meaningless for another pricing shape.
+    const existing = await prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { userId: true, type: true },
+    });
+    if (!existing || existing.userId !== user.id) {
+      return { success: false, message: "notFound" };
+    }
+    if (existing.type !== data.type) {
+      const activeReservations = await prisma.reservation.count({
+        where: {
+          listingId,
+          paymentStatus: { in: [PaymentStatus.Pending, PaymentStatus.Paid] },
+        },
+      });
+      if (activeReservations > 0) {
+        return { success: false, message: "hasReservations" };
+      }
+    }
+
     // updateMany scoped by userId doubles as the ownership check.
     const result = await prisma.listing.updateMany({
       where: { id: listingId, userId: user.id },
@@ -114,12 +157,13 @@ export async function updateListing(
         title: data.title,
         description: data.description,
         category: data.category,
+        type: data.type,
+        ...priceFields(data.type, data),
         amenities: data.amenities,
         guestCount: data.guestCount,
         bedroomCount: data.bedroomCount,
         bedCount: data.bedCount,
         bathroomCount: data.bathroomCount,
-        pricePerNight: data.pricePerNight,
         country: data.country,
         province: data.province || null,
         city: data.city,

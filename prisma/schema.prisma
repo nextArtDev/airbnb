@@ -105,6 +105,17 @@ enum ListingCategory {
   luxury
 }
 
+// Business type of an ad:
+// - nightly: vacation stay, booked online per night (pricePerNight)
+// - monthly: long-term rental; renter pays a refundable mortgage deposit
+//   ("رهن") at contract start + monthly rent ("اجاره")
+// - sale: property for sale (salePrice)
+enum ListingType {
+  nightly
+  monthly
+  sale
+}
+
 // Amenities are stable string keys (wifi, parking, pool...) translated at the
 // display layer via messages/*.json - never store localized text in the DB.
 model Listing {
@@ -114,14 +125,21 @@ model Listing {
   coverImage    String
   images        String[]
   category      ListingCategory
+  // Pricing shape depends on `type`; the DB CHECK constraint (listing_price_shape)
+  // guarantees the right field is present per type. pricePerNight is Int (never
+  // realistically above 2.1B/night and it feeds Int reservation math). The
+  // long-term fields use BigInt: Iranian deposits/sale prices routinely exceed
+  // Int32 (2.1B Toman).
+  type          ListingType     @default(nightly)
+  pricePerNight Int?            // nightly: price per night
+  monthlyRent   BigInt?         // monthly: rent per month (0 = رهن کامل, deposit-only)
+  mortgageAmount BigInt?        // monthly: refundable deposit paid at contract start (0 = none)
+  salePrice     BigInt?         // sale: total price
   amenities     String[]        @default([])
   guestCount    Int
   bedroomCount  Int
   bedCount      Int
   bathroomCount Int
-  // Stored in Toman. USD display/charge derives from the FX rate locked on
-  // each reservation at creation time.
-  pricePerNight Int
   country       String          @default("IR")
   province      String?
   city          String
@@ -141,6 +159,7 @@ model Listing {
 
   @@index([city])
   @@index([category])
+  @@index([type])
   @@index([userId])
   @@map("listing")
 }

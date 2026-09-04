@@ -11,6 +11,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { BookingSidebar } from "@/components/listing/booking-sidebar";
+import { InquirySidebar } from "@/components/listing/inquiry-sidebar";
 import { ImageGallery } from "@/components/listing/image-gallery";
 import { HeartButton } from "@/components/listing/heart-button";
 import { MapLoader } from "@/components/listing/map-loader";
@@ -57,6 +58,8 @@ async function ListingContent({
   const categoryDef = CATEGORIES.find((c) => c.value === detail.listing.category);
   const CategoryIcon = categoryDef?.icon;
   const images = [detail.listing.coverImage, ...detail.listing.images];
+  const listingType = detail.listing.type;
+  const isOwner = user?.id === detail.listing.userId;
 
   const stats = [
     { icon: Users, label: `${formatNumber(detail.listing.guestCount, locale)} ${t("guests")}` },
@@ -88,6 +91,11 @@ async function ListingContent({
                 <span className="flex items-center gap-1">
                   <CategoryIcon className="size-4" />
                   {th(`categories.${detail.listing.category}`)}
+                </span>
+              )}
+              {listingType !== "nightly" && (
+                <span className="flex items-center gap-1 rounded-full bg-rose-600/10 px-2 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-300">
+                  {th(`tabs.${listingType}`)}
                 </span>
               )}
             </p>
@@ -192,16 +200,29 @@ async function ListingContent({
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <BookingSidebar
-              listingId={listingId}
-              pricePerNight={detail.listing.pricePerNight}
-              guestCount={detail.listing.guestCount}
-              isOwner={user?.id === detail.listing.userId}
-              bookedRanges={detail.bookedRanges.map((r) => ({
-                start: r.startDate.toISOString(),
-                end: r.endDate.toISOString(),
-              }))}
-            />
+            {listingType === "nightly" ? (
+              <BookingSidebar
+                listingId={listingId}
+                pricePerNight={detail.listing.pricePerNight ?? 0}
+                guestCount={detail.listing.guestCount}
+                isOwner={isOwner}
+                bookedRanges={detail.bookedRanges.map((r) => ({
+                  start: r.startDate.toISOString(),
+                  end: r.endDate.toISOString(),
+                }))}
+              />
+            ) : (
+              <InquirySidebar
+                type={listingType}
+                ownerId={detail.listing.userId}
+                listingId={listingId}
+                isOwner={isOwner}
+                monthlyRent={detail.listing.monthlyRent}
+                mortgageAmount={detail.listing.mortgageAmount}
+                salePrice={detail.listing.salePrice}
+                city={detail.listing.city}
+              />
+            )}
           </aside>
         </div>
       </main>

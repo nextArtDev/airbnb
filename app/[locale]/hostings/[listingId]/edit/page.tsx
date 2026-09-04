@@ -26,12 +26,16 @@ export default async function EditListingPage(
       title: true,
       description: true,
       category: true,
+      type: true,
       amenities: true,
       guestCount: true,
       bedroomCount: true,
       bedCount: true,
       bathroomCount: true,
       pricePerNight: true,
+      monthlyRent: true,
+      mortgageAmount: true,
+      salePrice: true,
       country: true,
       province: true,
       city: true,
@@ -45,20 +49,31 @@ export default async function EditListingPage(
   // Ownership boundary: editing someone else's listing is a 404.
   if (!listing || listing.userId !== user.id) notFound();
 
+  // BigInt DB columns -> plain numbers for the form (JSON-safe).
+  const formDefaults = {
+    ...listing,
+    pricePerNight: listing.pricePerNight ?? undefined,
+    monthlyRent:
+      listing.type === "monthly" && listing.monthlyRent != null
+        ? Number(listing.monthlyRent)
+        : undefined,
+    mortgageAmount:
+      listing.type === "monthly" && listing.mortgageAmount != null
+        ? Number(listing.mortgageAmount)
+        : undefined,
+    salePrice:
+      listing.type === "sale" && listing.salePrice != null
+        ? Number(listing.salePrice)
+        : undefined,
+    province: listing.province ?? "",
+    address: listing.address ?? "",
+  } as Partial<ListingFormValues>;
+
   return (
     <>
       <Navbar />
       <main className="mx-auto max-w-5xl flex-1 px-4 py-10">
-        <ListingForm
-          listingId={listingId}
-          defaultValues={
-            {
-              ...listing,
-              province: listing.province ?? "",
-              address: listing.address ?? "",
-            } as Partial<ListingFormValues>
-          }
-        />
+        <ListingForm listingId={listingId} defaultValues={formDefaults} />
       </main>
       <Footer />
     </>

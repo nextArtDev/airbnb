@@ -18,6 +18,8 @@ import { Spinner } from "@/components/ui/spinner";
 
 const SUGGESTION_KEYS = [
   "howToBook",
+  "monthlyRent",
+  "buyHome",
   "payments",
   "cancel",
   "becomeHost",

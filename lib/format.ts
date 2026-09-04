@@ -4,12 +4,14 @@ import { FX, tomanToUsd } from "@/lib/fx";
  * Formats a Toman amount for the given locale:
  * - fa: Persian digits + "تومان"
  * - en/ar: USD equivalent (guests in these locales pay via Stripe)
+ * Accepts bigint too - long-term prices (deposits, sale prices) are BigInt
+ * columns in Postgres.
  */
-export function formatMoney(toman: number, locale: string): string {
+export function formatMoney(toman: number | bigint, locale: string): string {
   if (locale === "fa") {
     return `${new Intl.NumberFormat("fa-IR").format(toman)} تومان`;
   }
-  const usd = Math.round(tomanToUsd(toman) * 100) / 100;
+  const usd = Math.round(tomanToUsd(Number(toman)) * 100) / 100;
   return new Intl.NumberFormat(locale === "ar" ? "ar" : "en-US", {
     style: "currency",
     currency: "USD",

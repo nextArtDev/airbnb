@@ -7,13 +7,16 @@ import { DateRangePicker } from '@/components/booking/date-range-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useRouter } from '@/i18n/navigation'
+import type { ListingTypeTab } from '@/constants/categories'
 
 export function SearchBar({
   initialCity = '',
   initialGuests,
+  activeTab = 'all',
 }: {
   initialCity?: string
   initialGuests?: number
+  activeTab?: ListingTypeTab
 }) {
   const t = useTranslations('home')
   const tc = useTranslations('common')
@@ -25,13 +28,17 @@ export function SearchBar({
   const [to, setTo] = useState<Date | undefined>()
   const [guests, setGuests] = useState(initialGuests ?? 1)
 
+  // Monthly rentals and sales are not booked by dates.
+  const datesApply = activeTab === 'all' || activeTab === 'nightly'
+
   function onSearch(e: React.FormEvent) {
     e.preventDefault()
     const params = new URLSearchParams()
     if (city.trim()) params.set('city', city.trim())
     if (guests > 1) params.set('guests', String(guests))
-    if (from) params.set('checkIn', from.toISOString())
-    if (to) params.set('checkOut', to.toISOString())
+    if (activeTab !== 'all') params.set('type', activeTab)
+    if (datesApply && from) params.set('checkIn', from.toISOString())
+    if (datesApply && to) params.set('checkOut', to.toISOString())
     router.push(params.size > 0 ? `/?${params}` : '/')
   }
 
@@ -58,21 +65,23 @@ export function SearchBar({
         />
       </div>
 
-      {/* WHEN */}
-      <div className="group px-4 py-3 md:py-2 max-sm:border-b sm:border-e border-border/50 transition-colors hover:bg-accent/50 cursor-pointer">
-        <DateRangePicker
-          className="mt-0"
-          from={from}
-          to={to}
-          onChange={({ from: f, to: t2 }) => {
-            setFrom(f)
-            setTo(t2)
-          }}
-          label={t('when')}
-          placeholder={t('addDates')}
-          clearLabel={tc('clear')}
-        />
-      </div>
+      {/* WHEN - only relevant for nightly stays */}
+      {datesApply && (
+        <div className="group px-4 py-3 md:py-2 max-sm:border-b sm:border-e border-border/50 transition-colors hover:bg-accent/50 cursor-pointer">
+          <DateRangePicker
+            className="mt-0"
+            from={from}
+            to={to}
+            onChange={({ from: f, to: t2 }) => {
+              setFrom(f)
+              setTo(t2)
+            }}
+            label={t('when')}
+            placeholder={t('addDates')}
+            clearLabel={tc('clear')}
+          />
+        </div>
+      )}
 
       {/* WHO */}
       <div className="flex items-center justify-between gap-4 px-4 py-3 md:py-2 flex-1 sm:flex-initial">

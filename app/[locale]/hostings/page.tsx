@@ -33,6 +33,28 @@ export default async function HostingsPage(props: PageProps<"/[locale]/hostings"
 
   const t = await getTranslations("hosting");
   const tt = await getTranslations("trips");
+  const tl = await getTranslations("listing");
+  const th = await getTranslations("home");
+
+  // One-line price summary that adapts to the ad type (BigInt columns are
+  // normalized for formatting).
+  function priceLabel(listing: (typeof listings)[number]): string {
+    if (listing.type === "monthly") {
+      const rent = Number(listing.monthlyRent ?? 0);
+      const deposit = Number(listing.mortgageAmount ?? 0);
+      if (rent > 0 && deposit > 0) {
+        return `${tl("mortgage")} ${formatMoney(deposit, locale)} · ${formatMoney(rent, locale)} ${tl("perMonth")}`;
+      }
+      if (rent === 0 && deposit > 0) {
+        return `${tl("fullMortgage")}: ${formatMoney(deposit, locale)}`;
+      }
+      return `${formatMoney(rent, locale)} ${tl("perMonth")}`;
+    }
+    if (listing.type === "sale") {
+      return `${tl("salePrice")}: ${formatMoney(Number(listing.salePrice ?? 0), locale)}`;
+    }
+    return `${formatMoney(listing.pricePerNight ?? 0, locale)} ${tl("perNight")}`;
+  }
 
   return (
     <>
@@ -74,9 +96,11 @@ export default async function HostingsPage(props: PageProps<"/[locale]/hostings"
                       >
                         {listing.title}
                       </Link>
-                      <p className="text-xs text-muted-foreground">
-                        {listing.city} ·{" "}
-                        {formatMoney(listing.pricePerNight, locale)}
+                      <p className="line-clamp-1 text-xs text-muted-foreground">
+                        {listing.city} · {priceLabel(listing)}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground/80">
+                        {th(`tabs.${listing.type}`)}
                       </p>
                     </div>
                   </div>

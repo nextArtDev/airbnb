@@ -1,11 +1,13 @@
 import "server-only";
 
-import { PaymentStatus } from "@/app/generated/prisma/client";
+import { ListingType, PaymentStatus } from "@/app/generated/prisma/client";
 import prisma from "@/lib/prisma";
 
 export interface ListingFilters {
   city?: string;
   category?: string;
+  // Top-level ad type. Undefined = all types.
+  listingType?: ListingType;
   guests?: number;
   checkIn?: Date;
   checkOut?: Date;
@@ -15,6 +17,7 @@ export async function getListings(filters: ListingFilters = {}) {
   // Pending reservations also hold their dates until paid/cancelled/swept.
   const where = {
     published: true,
+    ...(filters.listingType ? { type: filters.listingType } : {}),
     ...(filters.city
       ? { city: { contains: filters.city, mode: "insensitive" as const } }
       : {}),
@@ -22,7 +25,12 @@ export async function getListings(filters: ListingFilters = {}) {
       ? { category: filters.category as never }
       : {}),
     ...(filters.guests ? { guestCount: { gte: filters.guests } } : {}),
-    ...(filters.checkIn && filters.checkOut
+    // Date availability only applies to nightly stays; monthly/sale ads are
+    // inquiry-based and never hold reservations.
+    ...(filters.listingType !== ListingType.monthly &&
+    filters.listingType !== ListingType.sale &&
+    filters.checkIn &&
+    filters.checkOut
       ? {
           reservations: {
             none: {

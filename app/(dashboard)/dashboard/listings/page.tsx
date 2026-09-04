@@ -5,6 +5,31 @@ import prisma from "@/lib/prisma";
 
 const PAGE_SIZE = 20;
 
+const TYPE_FA = {
+  nightly: "اقامتگاه",
+  monthly: "رهن و اجاره",
+  sale: "فروشی",
+} as const;
+
+function priceFa(listing: {
+  type: "nightly" | "monthly" | "sale";
+  pricePerNight: number | null;
+  monthlyRent: bigint | null;
+  mortgageAmount: bigint | null;
+  salePrice: bigint | null;
+}): string {
+  const fa = (n: number) => n.toLocaleString("fa-IR");
+  if (listing.type === "monthly") {
+    const rent = Number(listing.monthlyRent ?? 0);
+    const deposit = Number(listing.mortgageAmount ?? 0);
+    if (rent === 0) return `رهن کامل: ${fa(deposit)}`;
+    if (deposit === 0) return `اجاره: ${fa(rent)}/ماه`;
+    return `رهن ${fa(deposit)} / اجاره ${fa(rent)}`;
+  }
+  if (listing.type === "sale") return `${fa(Number(listing.salePrice ?? 0))}`;
+  return `${fa(listing.pricePerNight ?? 0)}/شب`;
+}
+
 export default async function DashboardListingsPage(props: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
@@ -21,7 +46,11 @@ export default async function DashboardListingsPage(props: {
         id: true,
         title: true,
         city: true,
+        type: true,
         pricePerNight: true,
+        monthlyRent: true,
+        mortgageAmount: true,
+        salePrice: true,
         published: true,
         createdAt: true,
         user: { select: { name: true } },
@@ -33,7 +62,7 @@ export default async function DashboardListingsPage(props: {
 
   return (
     <>
-      <h1 className="text-xl font-bold">اقامتگاه‌ها ({count.toLocaleString("fa-IR")})</h1>
+      <h1 className="text-xl font-bold">آگهی‌ها ({count.toLocaleString("fa-IR")})</h1>
 
       <div className="overflow-x-auto rounded-2xl border bg-card">
         <table className="w-full text-sm">
@@ -42,7 +71,8 @@ export default async function DashboardListingsPage(props: {
               <th className="p-3 text-start">عنوان</th>
               <th className="p-3 text-start">میزبان</th>
               <th className="p-3 text-start">شهر</th>
-              <th className="p-3 text-start">قیمت/شب</th>
+              <th className="p-3 text-start">نوع آگهی</th>
+              <th className="p-3 text-start">قیمت</th>
               <th className="p-3 text-start">رزروها</th>
               <th className="p-3 text-start">انتشار</th>
               <th className="p-3 text-start"></th>
@@ -62,8 +92,11 @@ export default async function DashboardListingsPage(props: {
                 </td>
                 <td className="p-3 text-muted-foreground">{l.user.name}</td>
                 <td className="p-3">{l.city}</td>
-                <td className="p-3" dir="ltr">
-                  {l.pricePerNight.toLocaleString("fa-IR")}
+                <td className="p-3">
+                  <Badge variant="outline">{TYPE_FA[l.type]}</Badge>
+                </td>
+                <td className="p-3 whitespace-nowrap" dir="auto">
+                  {priceFa(l)}
                 </td>
                 <td className="p-3">{l._count.reservations}</td>
                 <td className="p-3">
