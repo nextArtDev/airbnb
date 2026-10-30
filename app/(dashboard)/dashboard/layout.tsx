@@ -4,6 +4,12 @@ import type { Metadata } from 'next'
 import { Toaster } from '@/components/ui/sonner'
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 import { getCurrentUser } from '@/lib/auth-helpers'
+import {
+  getCommandIndex,
+  getNavCounts,
+  getNotifications,
+} from '@/lib/dashboard/analytics'
+import { faRelative } from '@/lib/dashboard/format'
 import '../../globals.css'
 
 const vazirmatn = localFont({
@@ -25,6 +31,23 @@ export default async function DashboardLayout({
   const user = await getCurrentUser()
   if (!user || user.role !== 'admin') notFound()
 
+  const [counts, notifications, commandEntries] = await Promise.all([
+    getNavCounts(),
+    getNotifications(),
+    getCommandIndex(),
+  ])
+
+  // Dates cannot cross the server -> client boundary, so resolve the relative
+  // label here and hand the client plain strings.
+  const items = notifications.map((notification) => ({
+    id: notification.id,
+    title: notification.title,
+    description: notification.description,
+    href: notification.href,
+    tone: notification.tone,
+    time: faRelative(notification.createdAt),
+  }))
+
   return (
     <html
       lang="fa"
@@ -32,7 +55,14 @@ export default async function DashboardLayout({
       className={`${vazirmatn.variable} h-full antialiased font-sans`}
     >
       <body className="flex min-h-full flex-col bg-muted/30">
-        <DashboardShell userName={user.name}>{children}</DashboardShell>
+        <DashboardShell
+          userName={user.name}
+          counts={counts}
+          notifications={items}
+          commandEntries={commandEntries}
+        >
+          {children}
+        </DashboardShell>
         <Toaster position="bottom-center" />
       </body>
     </html>

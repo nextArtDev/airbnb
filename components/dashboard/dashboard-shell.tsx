@@ -1,87 +1,93 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useState } from "react";
+import Link from "next/link";
+import { Menu } from "lucide-react";
+import { CommandPalette, type CommandEntry } from "@/components/dashboard/command-palette";
+import { Notifications, type NotificationItem } from "@/components/dashboard/notifications";
+import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import {
-  BedDouble,
-  CalendarDays,
-  LayoutDashboard,
-  MessageSquareText,
-  Users,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
-const NAV = [
-  { href: '/dashboard', label: 'نمای کلی', icon: LayoutDashboard },
-  { href: '/dashboard/users', label: 'کاربران', icon: Users },
-  { href: '/dashboard/listings', label: 'اقامتگاه‌ها', icon: BedDouble },
-  { href: '/dashboard/reservations', label: 'رزروها', icon: CalendarDays },
-  { href: '/dashboard/reviews', label: 'نظرات', icon: MessageSquareText },
-]
+export type DashboardCounts = {
+  users: number;
+  listings: number;
+  reservations: number;
+  reviews: number;
+  pending: number;
+};
 
 export function DashboardShell({
   userName,
+  counts,
+  notifications,
+  commandEntries,
   children,
 }: {
-  userName: string
-  children: React.ReactNode
+  userName: string;
+  counts: DashboardCounts;
+  notifications: NotificationItem[];
+  commandEntries: CommandEntry[];
+  children: React.ReactNode;
 }) {
-  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 p-4">
-      <aside className="sticky top-4 hidden h-fit w-56 shrink-0 rounded-2xl border bg-card p-3 md:block">
-        <p className="mb-1 px-3 pt-2 text-lg font-bold text-rose-500">
-          املاک آرات
-        </p>
-        <p className="mb-4 px-3 pb-2 text-xs text-muted-foreground">
-          پنل مدیریت · {userName}
-        </p>
-        <nav className="space-y-1">
-          {NAV.map(({ href, label, icon: Icon }) => {
-            const active =
-              href === '/dashboard'
-                ? pathname === '/dashboard'
-                : pathname.startsWith(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition hover:bg-accent',
-                  active && 'bg-accent font-semibold',
-                )}
-              >
-                <Icon className="size-4 text-muted-foreground" />
-                {label}
-              </Link>
-            )
-          })}
-        </nav>
-        <div className="my-3 h-px bg-border" />
-        <Link
-          href="/"
-          className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-accent"
-        >
-          ← بازگشت به سایت
-        </Link>
+    <div className="flex w-full flex-1 items-stretch">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 border-e bg-card/40 lg:flex lg:flex-col">
+        <SidebarNav counts={counts} userName={userName} />
       </aside>
 
-      <main className="min-w-0 flex-1 space-y-4">
-        {/* Mobile nav */}
-        <nav className="flex gap-2 overflow-x-auto md:hidden">
-          {NAV.map(({ href, label }) => (
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="right" className="w-64 gap-0 p-0">
+          <SheetTitle className="sr-only">ناوبری پنل</SheetTitle>
+          <SheetDescription className="sr-only">
+            بخش‌های پنل مدیریت
+          </SheetDescription>
+          <SidebarNav
+            counts={counts}
+            userName={userName}
+            onNavigate={() => setMobileOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur sm:px-4">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="grid size-8 place-items-center rounded-lg border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground lg:hidden"
+            aria-label="باز کردن منو"
+          >
+            <Menu className="size-4" />
+          </button>
+
+          <CommandPalette entries={commandEntries} />
+
+          <div className="ms-auto flex items-center gap-1.5">
+            <Notifications items={notifications} />
+            <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
             <Link
-              key={href}
-              href={href}
-              className="shrink-0 rounded-full border px-3 py-1.5 text-xs"
+              href="/"
+              className="flex h-8 items-center gap-2 rounded-lg border bg-card px-1.5 pe-2.5 text-xs font-medium transition hover:bg-accent"
             >
-              {label}
+              <span className="grid size-5 place-items-center rounded-md bg-rose-500 text-[10px] font-bold text-white">
+                {userName.slice(0, 1)}
+              </span>
+              <span className="hidden max-w-28 truncate sm:inline">{userName}</span>
             </Link>
-          ))}
-        </nav>
-        {children}
-      </main>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-[1500px] flex-1 p-3 sm:p-4 lg:p-6">
+          {children}
+        </main>
+      </div>
     </div>
-  )
+  );
 }

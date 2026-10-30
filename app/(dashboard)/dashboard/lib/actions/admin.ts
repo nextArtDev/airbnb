@@ -115,3 +115,96 @@ export async function adminDeleteReview(
   revalidatePath("/dashboard/reviews");
   return { success: true };
 }
+
+// ---------------------------------------------------------------------------
+// Bulk actions. Every one re-validates admin, caps the batch size and returns
+// the affected count so the toolbar can report what actually changed. Each is
+// exposed with the exact `(ids: string[]) => Promise<Result>` shape a client
+// component can receive as a prop - server actions cannot be wrapped in a
+// closure at the call site.
+// ---------------------------------------------------------------------------
+
+export type BulkResult = { success: boolean; count: number };
+
+const MAX_BULK = 100;
+
+function sanitizeIds(ids: string[]) {
+  return [
+    ...new Set(ids.filter((id) => typeof id === "string" && id.length > 0)),
+  ].slice(0, MAX_BULK);
+}
+
+async function setPublished(ids: string[], published: boolean): Promise<BulkResult> {
+  const safe = sanitizeIds(ids);
+  if (safe.length === 0) return { success: false, count: 0 };
+
+  const result = await prisma.listing.updateMany({
+    where: { id: { in: safe } },
+    data: { published },
+  });
+  revalidatePath("/dashboard/listings");
+  revalidatePath("/dashboard");
+  revalidatePath("/");
+  return { success: true, count: result.count };
+}
+
+export async function bulkPublishListings(ids: string[]): Promise<BulkResult> {
+  await requireAdmin();
+  return setPublished(ids, true);
+}
+
+export async function bulkUnpublishListings(ids: string[]): Promise<BulkResult> {
+  await requireAdmin();
+  return setPublished(ids, false);
+}
+
+export async function bulkCancelReservations(ids: string[]): Promise<BulkResult> {
+  await requireAdmin();
+  const safe = sanitizeIds(ids);
+  if (safe.length === 0) return { success: false, count: 0 };
+
+  // Only pendings: refunds must go through the gateway, never a bulk update.
+  const result = await prisma.reservation.updateMany({
+    where: { id: { in: safe }, paymentStatus: PaymentStatus.Pending },
+    data: { paymentStatus: PaymentStatus.Cancelled, authority: null },
+  });
+  revalidatePath("/dashboard/reservations");
+  revalidatePath("/dashboard");
+  return { success: true, count: result.count };
+}
+
+export async function bulkDeleteReviews(ids: string[]): Promise<BulkResult> {
+  await requireAdmin();
+  const safe = sanitizeIds(ids);
+  if (safe.length === 0) return { success: false, count: 0 };
+
+  const result = await prisma.review.deleteMany({ where: { id: { in: safe } } });
+  revalidatePath("/dashboard/reviews");
+  revalidatePath("/dashboard");
+  return { success: true, count: result.count };
+}
+
+async function setBanned(ids: string[], banned: boolean): Promise<BulkResult> {
+  const safe = sanitizeIds(ids);
+  if (safe.length === 0) return { success: false, count: 0 };
+
+  // Admins are never bulk-banned.
+  const result = await prisma.user.updateMany({
+    where: { id: { in: safe }, role: { not: "admin" } },
+    data: banned
+      ? { banned: true, banReason: "توسط مدیر مسدود شد" }
+      : { banned: false, banReason: null, banExpires: null },
+  });
+  revalidatePath("/dashboard/users");
+  return { success: true, count: result.count };
+}
+
+export async function bulkBanUsers(ids: string[]): Promise<BulkResult> {
+  await requireAdmin();
+  return setBanned(ids, true);
+}
+
+export async function bulkUnbanUsers(ids: string[]): Promise<BulkResult> {
+  await requireAdmin();
+  return setBanned(ids, false);
+}
